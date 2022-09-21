@@ -12,7 +12,7 @@ with Vimba.get_instance() as vimba:
     cams = vimba.get_all_cameras()
     with cams[0] as cam:
         # Load Camera Settings
-        cam.load_settings("colorsettingstest.xml", PersistType.All)
+        cam.load_settings("colorSetting.xml", PersistType.All)
 
         # Obtain Frame, Convert to Mono, Convert to OpenCV Image
         frame = cam.get_frame()
@@ -26,17 +26,17 @@ zemaxLut = lut.finalLut
 uniformityValue = 255*0.8
 # Set Pass/Fail Thresholds
 # - Intensity
-intensityHigh = 10430859
-intensityLow = 10430839
+intensityHigh = 3823869
+intensityLow = 3823860
 # - Symmetry
 symmetryHigh = 365
-symmetryLow = 360
+symmetryLow = 355
 # - X Vlaue
-xHigh = 290
-xLow = 280
+xHigh = 200
+xLow = 180
 # - Y Value
-yHigh = 165
-yLow = 155
+yHigh = 100
+yLow = 90
 
 # Initiate Flux Value
 flux = 0
