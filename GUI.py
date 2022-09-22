@@ -6,6 +6,7 @@ from matplotlib import use as use_agg
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import AVT_BeamAnalysis_NOCAMERA as data
+import JWL_NOCAM as JWL
 
 
 
@@ -45,8 +46,8 @@ image_column = [
 
 graph_column = [
     [sg.Text("Graph Analysis", size=(60, 1), justification="center")],
-    [sg.Graph((640, 480), (0, 0), (640, 480), key="Graph1")],
-    [sg.Graph((640, 480), (0, 0), (640, 480), key="Graph2")],
+    [sg.Graph((600, 400), (0, 0), (640, 480), key="Graph1")],
+    [sg.Graph((600, 400), (0, 0), (640, 480), key="Graph2")],
 ]
 
 # Define the window layout
@@ -75,11 +76,11 @@ while True:
     if event == "Exit" or event == sg.WIN_CLOSED:
         break
     elif event == "JWL":
-        frame = data.image
-        plot_figure(1, data.horiz_x, data.horiz_y)
-        plot_figure(2, data.vert_x, data.vert_y)
+        frame = JWL.image
+        plot_figure(1, JWL.horiz_x, JWL.horiz_y)
+        plot_figure(2, JWL.vert_x, JWL.vert_y)
     elif event == "LSR":
-        frame = data.filteredImage
+        frame = data.image
         plot_figure(1, data.horiz_x, data.horiz_y)
         plot_figure(2, data.vert_x, data.vert_y)
 
