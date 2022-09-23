@@ -1,13 +1,10 @@
 
 import PySimpleGUI as sg
 import cv2
-
 from matplotlib import use as use_agg
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import AVT_BeamAnalysis_NOCAMERA as data
-import JWL_NOCAM as JWL
-
+import measureLight as measure
 
 
 def pack_figure(graph, figure):
@@ -59,7 +56,7 @@ layout = [
 
 # Create the window and show it without the plot
 window = sg.Window('OpenCV Integration', layout, finalize=True)
-frame = cv2.imread("test.PNG")
+frame = cv2.imread("SVL_Stack.png")
 graph1 = window["Graph1"]
 graph2 = window["Graph2"]
 plt.ioff()
@@ -76,13 +73,13 @@ while True:
     if event == "Exit" or event == sg.WIN_CLOSED:
         break
     elif event == "JWL":
-        frame = JWL.image
-        plot_figure(1, JWL.horiz_x, JWL.horiz_y)
-        plot_figure(2, JWL.vert_x, JWL.vert_y)
+        frame, horiz_x, horiz_y, vert_x, vert_y = measure.measure_light("JWL")
+        plot_figure(1, horiz_x, horiz_y)
+        plot_figure(2, vert_x, vert_y)
     elif event == "LSR":
-        frame = data.image
-        plot_figure(1, data.horiz_x, data.horiz_y)
-        plot_figure(2, data.vert_x, data.vert_y)
+        frame, horiz_x, horiz_y, vert_x, vert_y = measure.measure_light("LSR")
+        plot_figure(1, horiz_x, horiz_y)
+        plot_figure(2, vert_x, vert_y)
 
 
     imgbytes = cv2.imencode(".png", frame)[1].tobytes()

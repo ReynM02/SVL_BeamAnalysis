@@ -1,0 +1,14 @@
+{
+    "light": "JWL",
+    "size": 150,
+    "color": "WHI",
+    "exposure": 500,
+    "intensityHigh": 3823869,
+    "intensityLow": 3823860,
+    "symmetryHigh": 365,
+    "symmetryLow": 355,
+    "xHigh": 200,
+    "xLow": 180,
+    "yHigh": 100,
+    "yLow": 90
+}

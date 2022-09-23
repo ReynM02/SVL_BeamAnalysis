@@ -1,0 +1,14 @@
+{
+    "light": "LSR",
+    "size": 300,
+    "color": "WHI",
+    "exposure": 500,
+    "intensityHigh": 10430855,
+    "intensityLow": 10430840,
+    "symmetryHigh": 365,
+    "symmetryLow": 360,
+    "xHigh": 290,
+    "xLow": 280,
+    "yHigh": 165,
+    "yLow": 155
+}
