@@ -6,36 +6,38 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import measureLight as measure
 
-
+# Pack the Graphs from MatPlotLib to TKinter
 def pack_figure(graph, figure):
     canvas = FigureCanvasTkAgg(figure, graph.Widget)
     plot_widget = canvas.get_tk_widget()
     plot_widget.pack(side='top', fill='both', expand=1)
     return plot_widget
 
+# Cleats and Plots the Graphs
 def plot_figure(index, x, y):
-    fig = plt.figure(index)         # Active an existing figure
-    ax = plt.gca()                  # Get the current axes
-    ax.cla()                        # Clear the current axes
-    if index == 1:
-        ax.set_title("Horizontal Profile")
+    fig = plt.figure(index)         # Select Graph to Change
+    ax = plt.gca()                  # Get the current graph
+    ax.cla()                        # Clear the current graph
+    if index == 1:                     
+        ax.set_title("Horizontal Profile")  # Set Titles for Graphs
     else:
         ax.set_title("Vertical Profile")
     plt.plot(x, y)                  # Plot y versus x as lines and/or markers
-    fig.canvas.draw()  
+    fig.canvas.draw()               # Re-Draws Graph 
 
 
 fig1 = plt.figure(1)                # Create a new figure
-ax1 = plt.subplot(111)              # Add a subplot to the current figure.
+ax1 = plt.subplot(111)              # Add a subplot to the current figure
 fig2 = plt.figure(2)                # Create a new figure
-ax2 = plt.subplot(111)              # Add a subplot to the current figure.
+ax2 = plt.subplot(111)              # Add a subplot to the current figure
+hidden = True
 
 use_agg('TkAgg')
 sg.theme("DarkGrey2")
 
 image_column = [
-    [sg.Text("Beam Analysis", size=(60, 1), justification="center")],
-    [sg.Image(filename="", key="-IMAGE-", size=(10, 10))],
+    [sg.Text("\nBeam Analysis", size=(160, 5), justification="center", font=100)],
+    [sg.Image(filename="", key="-IMAGE-", size=(600, 600))],
     [sg.Button("Exit", size=(10, 1))],
     [sg.Button("JWL", size =(10, 1))],
     [sg.Button("LSR", size =(10, 1))],
@@ -43,19 +45,20 @@ image_column = [
 
 graph_column = [
     [sg.Text("Graph Analysis", size=(60, 1), justification="center")],
-    [sg.Graph((600, 400), (0, 0), (640, 480), key="Graph1")],
-    [sg.Graph((600, 400), (0, 0), (640, 480), key="Graph2")],
+    [sg.Graph((300, 200), (0, 0), (300, 200), key="Graph1")],
+    [sg.Graph((300, 200), (0, 0), (300, 200), key="Graph2")],
 ]
 
 # Define the window layout
 layout = [
     [sg.Column(image_column),
+    sg.Button("Hide/Show", size=(10,1)),
     sg.VSeperator(),
-    sg.Column(graph_column)],
+    sg.Column(graph_column, visible=False, key="-GRAPHS-")],
 ]
 
-# Create the window and show it without the plot
-window = sg.Window('OpenCV Integration', layout, finalize=True)
+# Create the window and show it
+window = sg.Window('Smart Vision Lights Beam Analysis', layout, finalize=True, resizable=True)
 frame = cv2.imread("SVL_Stack.png")
 graph1 = window["Graph1"]
 graph2 = window["Graph2"]
@@ -68,15 +71,24 @@ plot_figure(1, x, y)
 plot_figure(2, x, y)
 
 
+# --- Main Loop ---
 while True:   
-    event, values = window.read(timeout=20)
-    if event == "Exit" or event == sg.WIN_CLOSED:
+    event, values = window.read(timeout=20) # Reads window actions waiting for inputs
+    # event is an action... event == "Exit" is Exit Button being pressed
+    if event == "Exit" or event == sg.WIN_CLOSED: # Exit Button Pressed or Window Closed
         break
-    elif event == "JWL":
+    elif event == "Hide/Show":
+        if hidden == True:
+            window['-GRAPHS-'].update(visible=True)
+            hidden = False
+        else:
+            window['-GRAPHS-'].update(visible=False)
+            hidden = True
+    elif event == "JWL": # JWL Button Pressed
         frame, horiz_x, horiz_y, vert_x, vert_y = measure.measure_light("JWL")
         plot_figure(1, horiz_x, horiz_y)
         plot_figure(2, vert_x, vert_y)
-    elif event == "LSR":
+    elif event == "LSR": # LSR Button Pressed
         frame, horiz_x, horiz_y, vert_x, vert_y = measure.measure_light("LSR")
         plot_figure(1, horiz_x, horiz_y)
         plot_figure(2, vert_x, vert_y)

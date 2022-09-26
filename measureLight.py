@@ -28,10 +28,11 @@ def measure_light(light):
                 frame = cam.get_frame()
                 frame.convert_pixel_format(PixelFormat.Mono8)
                 image = frame.as_opencv_image()
+                test = False
     except:
         image = cv2.imread("test_1.PNG")
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        test = False
+        test = True
 
     # Grab Lut Exported From Zemax
     zemaxLut = lut.finalLut
@@ -43,8 +44,8 @@ def measure_light(light):
     intensityHigh = data['intensityHigh']
     intensityLow = data['intensityLow']
     # - Symmetry
-    symmetryHigh = data['symmetryHigh']
-    symmetryLow = data['symmetryLow']
+    symmetryGap = data['symmetry_gap']
+    #symmetryLow = data['symmetryLow']
     # - X Vlaue
     xHigh = data['xHigh']
     xLow = data['xLow']
@@ -88,6 +89,9 @@ def measure_light(light):
 
             midpoint_vertical = int((maxVal_2 + minVal) / 2)
             midpoint_horizontal = int((otherIndex[0][-1] + otherIndex[0][0]) / 2)
+
+            symmetryHigh = int(midpoint_horizontal+(symmetryGap/2))
+            symmetryLow = int(midpoint_horizontal-(symmetryGap/2))
 
             # Calculate total Flux of 80% rectangle
             row = otherIndex[0][0]
