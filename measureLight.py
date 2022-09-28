@@ -25,7 +25,8 @@ def capture(light): #Captures Image and Performs Background Subtraction
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         test = True
     
-    #ToDo: Back Ground Subtraction, fgImage - bgImage = image. How To With OpenCV?
+    #ToDo: Back Ground Subtraction, fgImage - bgImage > threshhold. How To With OpenCV? https://stackoverflow.com/questions/34615331/opencv-background-subtraction
+
 
 def measure_light(light):
 
