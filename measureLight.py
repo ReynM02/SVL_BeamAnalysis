@@ -8,6 +8,8 @@ from array import *
 import lut
 import json
 
+
+
 def measure_light(light):
 
     # Import Config File
