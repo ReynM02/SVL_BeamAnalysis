@@ -1,4 +1,3 @@
-
 from vimba import *
 import cv2
 import numpy as np
@@ -8,7 +7,25 @@ from array import *
 import lut
 import json
 
+def capture(light): #Captures Image and Performs Background Subtraction
+    settingsfile = light + "Settings.xml"
+    try:
+        with Vimba.get_instance() as vimba:
+            cams = vimba.get_all_cameras()
+            with cams[0] as cam:
+                cam.load_settings(settingsfile)
 
+                frame = cam.get_frame()
+                bgImage = frame.as_opencv_image()
+                frame = cam.get_frame()
+                fgImage = frame.as_opencv_image()
+                test = False
+    except:
+        image = cv2.imread("test_1.PNG")
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        test = True
+    
+    #ToDo: Back Ground Subtraction, fgImage - bgImage = image. How To With OpenCV?
 
 def measure_light(light):
 
