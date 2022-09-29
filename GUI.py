@@ -35,26 +35,30 @@ hidden = True
 use_agg('TkAgg')
 sg.theme("DarkGrey2")
 
-image_column = [
-    [sg.Text("\nBeam Analysis", size=(160, 5), justification="center", font=100)],
-    [sg.Image(filename="", key="-IMAGE-", size=(600, 600))],
+buttons = [
     [sg.Button("Exit", size=(10, 1))],
     [sg.Button("JWL", size =(10, 1))],
     [sg.Button("LSR", size =(10, 1))],
 ]
 
+image_column = [
+    [sg.Text("\nBeam Analysis", size=(160, 5), justification="center", font=100)],
+    [sg.Image(filename="", key="-IMAGE-", size=(100, 100), expand_x=True)],
+    [sg.Column(buttons)],
+]
+
 graph_column = [
     [sg.Text("Graph Analysis", size=(60, 1), justification="center")],
-    [sg.Graph((300, 200), (0, 0), (300, 200), key="Graph1")],
-    [sg.Graph((300, 200), (0, 0), (300, 200), key="Graph2")],
+    [sg.Graph((200, 100), (0, 0), (200, 100), key="Graph1", expand_x=True, expand_y=True)],
+    [sg.Graph((200, 100), (0, 0), (200, 100), key="Graph2", expand_x=True, expand_y=True)],
 ]
 
 # Define the window layout
 layout = [
-    [sg.Column(image_column),
-    sg.Button("Hide/Show", size=(10,1)),
+    [sg.Column(image_column, expand_x=True, expand_y=True, size_subsample_width=2),
+    sg.Button("Advanced", size=(10,1), key="-HIDE-"),
     sg.VSeperator(),
-    sg.Column(graph_column, visible=False, key="-GRAPHS-")],
+    sg.Column(graph_column, visible=False, key="-GRAPHS-", expand_x=True, expand_y=True)],
 ]
 
 # Create the window and show it
@@ -71,25 +75,25 @@ plot_figure(1, x, y)
 plot_figure(2, x, y)
 
 
-# --- Main Loop ---
+### --- Main Loop --- ###
 while True:   
     event, values = window.read(timeout=20) # Reads window actions waiting for inputs
     # event is an action... event == "Exit" is Exit Button being pressed
     if event == "Exit" or event == sg.WIN_CLOSED: # Exit Button Pressed or Window Closed
         break
-    elif event == "Hide/Show":
+    elif event == "-HIDE-":
         if hidden == True:
             window['-GRAPHS-'].update(visible=True)
             hidden = False
         else:
             window['-GRAPHS-'].update(visible=False)
             hidden = True
-    elif event == "JWL": # JWL Button Pressed
-        frame, horiz_x, horiz_y, vert_x, vert_y = measure.measure_light("JWL")
+    elif event == "JWL": # JWL Button Pressed  
+        frame, horiz_x, horiz_y, vert_x, vert_y = measure.main(event)
         plot_figure(1, horiz_x, horiz_y)
         plot_figure(2, vert_x, vert_y)
     elif event == "LSR": # LSR Button Pressed
-        frame, horiz_x, horiz_y, vert_x, vert_y = measure.measure_light("LSR")
+        frame, horiz_x, horiz_y, vert_x, vert_y = measure.main(event)
         plot_figure(1, horiz_x, horiz_y)
         plot_figure(2, vert_x, vert_y)
 
