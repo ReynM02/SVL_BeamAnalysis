@@ -7,7 +7,10 @@ from array import *
 import lut
 import json
 
-def capture(light): #Captures Image and Performs Background Subtraction
+# Global Test Var
+test = False
+
+def capture(light): #Captures Image, Performs Background Subtraction, Determines Test Mode
     settingsfile = light + "Settings.xml"
     try:
         with Vimba.get_instance() as vimba:
@@ -25,34 +28,25 @@ def capture(light): #Captures Image and Performs Background Subtraction
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         test = True
     
-    #ToDo: Back Ground Subtraction, fgImage - bgImage > threshhold. How To With OpenCV? https://stackoverflow.com/questions/34615331/opencv-background-subtraction
+    if test == False:
+        image = cv2.absdiff(fgImage, bgImage)
 
-
-def measure_light(light):
-
-    # Import Config File
+    return image
+#End Capture()
+   
+def loadConfig(light):
     filePath = "configs/"+light+".json"
     with open(filePath, 'r') as file:
         data = json.load(file)
+    return data
+#End loadConfig()
 
-    try:
-        # Initialize Vimba Instance
-        with Vimba.get_instance() as vimba:
-            # Connect to Camera
-            cams = vimba.get_all_cameras()
-            with cams[0] as cam:
-                # Load Camera Settings
-                cam.load_settings("colorSetting.xml", PersistType.All)
+def measure(image, data, light):
+    # Load Config for Light
+    data = loadConfig(light)
 
-                # Obtain Frame, Convert to Mono, Convert to OpenCV Image
-                frame = cam.get_frame()
-                frame.convert_pixel_format(PixelFormat.Mono8)
-                image = frame.as_opencv_image()
-                test = False
-    except:
-        image = cv2.imread("test_1.PNG")
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        test = True
+    # Obtain Image
+    image = capture(data["light"])
 
     # Grab Lut Exported From Zemax
     zemaxLut = lut.finalLut
@@ -242,7 +236,4 @@ def measure_light(light):
             if test == True:
                 cv2.putText(image, "TEST IMAGE", (150,440), cv2.FONT_HERSHEY_SIMPLEX, 5, (0,0,0), 6)
     return image, horiz_x, horiz_y, vert_x, vert_y
-
-
-
-
+#End measure()

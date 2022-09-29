@@ -88,12 +88,12 @@ while True:
         else:
             window['-GRAPHS-'].update(visible=False)
             hidden = True
-    elif event == "JWL": # JWL Button Pressed
-        frame, horiz_x, horiz_y, vert_x, vert_y = measure.measure_light("JWL")
+    elif event == "JWL": # JWL Button Pressed  
+        frame, horiz_x, horiz_y, vert_x, vert_y = measure.main(event)
         plot_figure(1, horiz_x, horiz_y)
         plot_figure(2, vert_x, vert_y)
     elif event == "LSR": # LSR Button Pressed
-        frame, horiz_x, horiz_y, vert_x, vert_y = measure.measure_light("LSR")
+        frame, horiz_x, horiz_y, vert_x, vert_y = measure.main(event)
         plot_figure(1, horiz_x, horiz_y)
         plot_figure(2, vert_x, vert_y)
 
