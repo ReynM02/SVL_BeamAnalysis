@@ -1,0 +1,13 @@
+{
+    "light": "LSR",
+    "size": 300,
+    "color": "470",
+    "exposure": 500,
+    "intensityHigh": 10430855,
+    "intensityLow": 10430840,
+    "symmetry_gap": 10,
+    "xHigh": 290,
+    "xLow": 280,
+    "yHigh": 165,
+    "yLow": 155
+}

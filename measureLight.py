@@ -34,16 +34,16 @@ def capture(light): #Captures Image, Performs Background Subtraction, Determines
     return image
 #End Capture()
    
-def loadConfig(light):
-    filePath = "configs/"+light+".json"
+def loadConfig(light, size, color):
+    filePath = "configs/"+light+size+"-"+color+".json"
     with open(filePath, 'r') as file:
         data = json.load(file)
     return data
 #End loadConfig()
 
-def measure(image, data, light):
+def measure(light, size, color):
     # Load Config for Light
-    data = loadConfig(light)
+    data = loadConfig(light, size, color)
 
     # Obtain Image
     image = capture(data["light"])
@@ -186,7 +186,7 @@ def measure(image, data, light):
             cv2.putText(image, "x: " + str(xLow) + ", " + str(xHigh) + ", " + str(horiz_length), (25,105), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2) #X value - 80% Uniformity Size
             cv2.putText(image, "y: " + str(yLow) + ", " + str(yHigh) + ", " + str(vert_length), (25,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2) #Y value - 80% Uniformity Size
             # - Light P/N + Family
-            PN = data["light"] + "-" + str(data["size"]) + "-" + data["color"]
+            PN = data["light"] + str(data["size"]) + "-" + data["color"]
             cv2.putText(image, PN, (1142,35), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2) #Light Part Number
             cv2.putText(image, data["light"] + " Family", (1142,60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2) #Light Family(First part of the Part Number) - redundant?
             # - Date & Time
