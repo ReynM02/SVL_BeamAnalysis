@@ -1,3 +1,4 @@
+from distutils.log import error
 from vimba import *
 import cv2
 import numpy as np
@@ -6,9 +7,6 @@ import datetime
 from array import *
 import lut
 import json
-
-# Global Test Var
-test = False
 
 def capture(light): #Captures Image, Performs Background Subtraction, Determines Test Mode
     settingsfile = light + "Settings.xml"
@@ -20,6 +18,7 @@ def capture(light): #Captures Image, Performs Background Subtraction, Determines
 
                 frame = cam.get_frame()
                 bgImage = frame.as_opencv_image()
+                #ToDo: Trigger Light
                 frame = cam.get_frame()
                 fgImage = frame.as_opencv_image()
                 test = False
@@ -31,29 +30,36 @@ def capture(light): #Captures Image, Performs Background Subtraction, Determines
     if test == False:
         image = cv2.absdiff(fgImage, bgImage)
 
-    return image
+    return image, test
 #End Capture()
    
 def loadConfig(light, size, color):
     filePath = "configs/"+light+size+"-"+color+".json"
-    with open(filePath, 'r') as file:
-        data = json.load(file)
-    return data
+    try:
+        with open(filePath, 'r') as file:
+            data = json.load(file)
+        return data
+    except FileNotFoundError as e:
+        return 1
 #End loadConfig()
 
 def measure(light, size, color):
     # Load Config for Light
     data = loadConfig(light, size, color)
+    
+    if data == 1:
+        return None
 
-    # Obtain Image
-    image = capture(data["light"])
+    # Obtain Image #
+    image, test = capture(data["light"])
 
-    # Grab Lut Exported From Zemax
+    # Grab Lut Exported From Zemax #
     zemaxLut = lut.finalLut
 
-    # Set Uniformity Value
+    # Set Uniformity Value #
     uniformityValue = 255*0.8
-    # Set Pass/Fail Thresholds
+
+    # Set Pass/Fail Thresholds From Config #
     # - Intensity
     intensityHigh = data['intensityHigh']
     intensityLow = data['intensityLow']

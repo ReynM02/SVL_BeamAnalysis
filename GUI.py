@@ -1,4 +1,6 @@
 
+from email.errors import InvalidMultipartContentTransferEncodingDefect
+from msilib.schema import Error
 import PySimpleGUI as sg
 import cv2
 from matplotlib import use as use_agg
@@ -123,9 +125,17 @@ while True:
         light = values["-LIGHT-"]
         lightSize = values["-SIZE-"]
         color = values["-COLORS-"]
-        frame, horiz_x, horiz_y, vert_x, vert_y = SLA.measure(light, lightSize, color)
-        #plot_figure(1, horiz_x, horiz_y)
-        #plot_figure(2, vert_x, vert_y)
+        try:
+            frame, horiz_x, horiz_y, vert_x, vert_y = SLA.measure(light, lightSize, color)
+            invalConfig = False
+        except:
+            invalConfig = True
+
+        if invalConfig == True:
+            sg.popup('Error: Invalid Light Configuration, Verify Selected Configuration.', title="Error: InvalLightConfig", modal=True)
+        else:    
+            plot_figure(1, horiz_x, horiz_y)
+            plot_figure(2, vert_x, vert_y)
     if event == "-LIGHT-":
         if values["-LIGHT-"] == 'JWL':
             window["-SIZE-"].update(values=other_size)
