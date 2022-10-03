@@ -15,7 +15,7 @@ RED = 'red'
 GREEN = 'grn'
 
 
-def capture(light): #Captures Image, Performs Background Subtraction, Determines Test Mode
+def capture(light, lightColor): #Captures Image, Performs Background Subtraction, Determines Test Mode
     settingsfile = light + "Settings.xml"
     try:
         with Vimba.get_instance() as vimba:
@@ -35,7 +35,22 @@ def capture(light): #Captures Image, Performs Background Subtraction, Determines
         test = True
     
     if test == False:
-        image = cv2.absdiff(fgImage, bgImage)
+        if lightColor == "WHI":
+            fgImage = cv2.cvtColor(fgImage, cv2.COLOR_RGB2GRAY)
+            bgImage = cv2.cvtColor(bgImage, cv2.COLOR_RGB2GRAY)
+            image = cv2.absdiff(fgImage, bgImage)
+        elif lightColor == "470":
+            bgImage = cv2.split(bgImage)
+            fgImage = cv2.split(fgImage)
+            image = cv2.absdiff(fgImage[1], bgImage[1])
+        elif lightColor == "625":
+            bgImage = cv2.split(bgImage)
+            fgImage = cv2.split(fgImage)
+            image = cv2.absdiff(fgImage[3], bgImage[3])
+        else:
+            # No valid light channel
+            testChannel = None
+            
         image = cv2.COLOR_BGR2RGB(image)
 
     return image, test
@@ -46,9 +61,10 @@ def loadConfig(light, size, color):
     try:
         with open(filePath, 'r') as file:
             data = json.load(file)
-        return data
     except FileNotFoundError as e:
         return 1
+
+    return data
 #End loadConfig()
 
 def measure(light, size, color):
@@ -59,15 +75,13 @@ def measure(light, size, color):
         return None
 
     # Obtain Image
-    image, test = capture(data["light"])
+    image, test = capture(data["light"], data["color"])
 
     # Grab Lut Exported From Zemax 
     zemaxLut = lut.finalLut
 
     # Set Uniformity Value 
     uniformityValue = 255*0.8
-
-
 
     ## -- Set Pass/Fail Thresholds From Config -- ##
     # - Intensity
@@ -84,19 +98,6 @@ def measure(light, size, color):
 
     # Initiate Flux Value
     flux = 0
-
-    # Grab Color of Light and determine channel to test on
-    lightColor = data['color']
-    if lightColor == "WHI":
-        testChannel = WHITE
-    elif lightColor == "470":
-        testChannel = BLUE
-    elif lightColor == "625":
-        testChannel = RED
-    else:
-        # No valid light channel
-        testChannel = None
-        return None
 
     # Blur The Image
     filteredImage = cv2.GaussianBlur(image,(15,15),0)
