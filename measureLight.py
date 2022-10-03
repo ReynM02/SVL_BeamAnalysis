@@ -1,4 +1,3 @@
-from distutils.log import error
 from vimba import *
 import cv2
 import numpy as np
@@ -7,6 +6,14 @@ import datetime
 from array import *
 import lut
 import json
+
+
+# Define Color Test Constants
+WHITE = 'whi'
+BLUE = 'blu'
+RED = 'red'
+GREEN = 'grn'
+
 
 def capture(light): #Captures Image, Performs Background Subtraction, Determines Test Mode
     settingsfile = light + "Settings.xml"
@@ -29,6 +36,7 @@ def capture(light): #Captures Image, Performs Background Subtraction, Determines
     
     if test == False:
         image = cv2.absdiff(fgImage, bgImage)
+        image = cv2.COLOR_BGR2RGB(image)
 
     return image, test
 #End Capture()
@@ -50,22 +58,23 @@ def measure(light, size, color):
     if data == 1:
         return None
 
-    # Obtain Image #
+    # Obtain Image
     image, test = capture(data["light"])
 
-    # Grab Lut Exported From Zemax #
+    # Grab Lut Exported From Zemax 
     zemaxLut = lut.finalLut
 
-    # Set Uniformity Value #
+    # Set Uniformity Value 
     uniformityValue = 255*0.8
 
-    # Set Pass/Fail Thresholds From Config #
+
+
+    ## -- Set Pass/Fail Thresholds From Config -- ##
     # - Intensity
     intensityHigh = data['intensityHigh']
     intensityLow = data['intensityLow']
     # - Symmetry
     symmetryGap = data['symmetry_gap']
-    #symmetryLow = data['symmetryLow']
     # - X Vlaue
     xHigh = data['xHigh']
     xLow = data['xLow']
@@ -75,6 +84,19 @@ def measure(light, size, color):
 
     # Initiate Flux Value
     flux = 0
+
+    # Grab Color of Light and determine channel to test on
+    lightColor = data['color']
+    if lightColor == "WHI":
+        testChannel = WHITE
+    elif lightColor == "470":
+        testChannel = BLUE
+    elif lightColor == "625":
+        testChannel = RED
+    else:
+        # No valid light channel
+        testChannel = None
+        return None
 
     # Blur The Image
     filteredImage = cv2.GaussianBlur(image,(15,15),0)
@@ -153,8 +175,9 @@ def measure(light, size, color):
                     y_end = y_end - 1
                     x=x+1
 
-            #Convert Image to RGB
-            image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+            if test == True:
+                #Convert Image to RGB
+                image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
             #Apply Custom LUT
             image = cv2.LUT(image, zemaxLut)
@@ -215,7 +238,6 @@ def measure(light, size, color):
                 cv2.putText(image, "FAIL", (650,35), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2) 
 
             # -- Symmetry
-            #ToDo: Create a symmetry test
             if cY > symmetryLow and cY < symmetryHigh:
                 # Symmetry Passed
                 cv2.putText(image, "PASS", (650,70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2) 
