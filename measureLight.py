@@ -16,44 +16,46 @@ GREEN = 'grn'
 
 
 def capture(light, lightColor): #Captures Image, Performs Background Subtraction, Determines Test Mode
-    settingsfile = light + "Settings.xml"
-    try:
+    #settingsfile = "CameraSettings/colorSettings.xml"
+    #try:
         with Vimba.get_instance() as vimba:
             cams = vimba.get_all_cameras()
+            print('cams obtained')
             with cams[0] as cam:
-                cam.load_settings(settingsfile)
-
+                print('cam[0] found')
+                cam.load_settings("colorSettings.xml", PersistType.All)
+                print('color settings loaded')
                 frame = cam.get_frame()
-                bgImage = frame.as_opencv_image()
+                print('frame grabbed')
+                #bgImage = frame.as_opencv_image()
                 #ToDo: Trigger Light
-                frame = cam.get_frame()
-                fgImage = frame.as_opencv_image()
+                #frame = cam.get_frame()
+                #fgImage = frame.as_opencv_image()
                 test = False
-    except:
-        image = cv2.imread("test_1.PNG")
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        test = True
+                image = frame.as_opencv_image()
+                print('image converted to opencv')
+    #except:
+     #   image = cv2.imread("test_1.PNG")
+      #  image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+       # test = True
     
-    if test == False:
-        if lightColor == "WHI":
-            fgImage = cv2.cvtColor(fgImage, cv2.COLOR_RGB2GRAY)
-            bgImage = cv2.cvtColor(bgImage, cv2.COLOR_RGB2GRAY)
-            image = cv2.absdiff(fgImage, bgImage)
-        elif lightColor == "470":
-            bgImage = cv2.split(bgImage)
-            fgImage = cv2.split(fgImage)
-            image = cv2.absdiff(fgImage[1], bgImage[1])
-        elif lightColor == "625":
-            bgImage = cv2.split(bgImage)
-            fgImage = cv2.split(fgImage)
-            image = cv2.absdiff(fgImage[3], bgImage[3])
-        else:
-            # No valid light channel
-            testChannel = None
-            
-        image = cv2.COLOR_BGR2RGB(image)
+    #if test == False:
+    #    if lightColor == "WHI":
+     #       fgImage = cv2.cvtColor(fgImage, cv2.COLOR_RGB2GRAY)
+      #      bgImage = cv2.cvtColor(bgImage, cv2.COLOR_RGB2GRAY)
+       #     image = cv2.absdiff(fgImage, bgImage)
+        #elif lightColor == "470":
+        #    bgImage = cv2.split(bgImage)
+         #   fgImage = cv2.split(fgImage)
+          #  image = cv2.absdiff(fgImage[1], bgImage[1])
+        #elif lightColor == "625":
+         #   bgImage = cv2.split(bgImage)
+          #  fgImage = cv2.split(fgImage)
+           # image = cv2.absdiff(fgImage[3], bgImage[3])
 
-    return image, test
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        return image, test
 #End Capture()
    
 def loadConfig(light, size, color):
@@ -101,10 +103,11 @@ def measure(light, size, color):
 
     # Blur The Image
     filteredImage = cv2.GaussianBlur(image,(15,15),0)
+    bwImage = cv2.cvtColor(filteredImage, cv2.COLOR_RGB2GRAY)
 
     # Create a Bianary Array, Where Pixels Within The 80% Uniformity Are 1, And Those Outside Are 0.
     # Essentially This is Blob Detection
-    ret,thresh = cv2.threshold(filteredImage,uniformityValue,255,0)
+    ret,thresh = cv2.threshold(bwImage,uniformityValue,255,0)
 
     # Calculate The Moments of The Bianary Image
     M = cv2.moments(thresh)
@@ -144,7 +147,7 @@ def measure(light, size, color):
                 col = minVal
                 col_max = maxVal_2
                 while col <= col_max:
-                    flux = flux + image[row-1][col-1]
+                    flux = flux + bwImage[row-1][col-1]
                     col = col+1
                 row = row+1
 
@@ -164,7 +167,7 @@ def measure(light, size, color):
             x = 0
             if x_end != 0:
                 while x_end >= x_start:
-                    horizontal_profile[x-1] = image[cY][x_end-1]
+                    horizontal_profile[x-1] = bwImage[cY][x_end-1]
                     x_end = x_end - 1
                     x=x+1
 
@@ -172,7 +175,7 @@ def measure(light, size, color):
             x = 0
             if y_end != 0:
                 while y_end >= y_start:
-                    vertical_profile[x-1] = image[y_end-1][cX]
+                    vertical_profile[x-1] = bwImage[y_end-1][cX]
                     y_end = y_end - 1
                     x=x+1
 
@@ -266,3 +269,5 @@ def measure(light, size, color):
                 cv2.putText(image, "TEST IMAGE", (150,440), cv2.FONT_HERSHEY_SIMPLEX, 5, (0,0,0), 6)
     return image, horiz_x, horiz_y, vert_x, vert_y
 #End measure()
+
+measure('JWL', '225', 'WHI')
