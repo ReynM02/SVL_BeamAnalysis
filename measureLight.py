@@ -8,13 +8,6 @@ import lut
 import json
 
 
-# Define Color Test Constants
-WHITE = 'whi'
-BLUE = 'blu'
-RED = 'red'
-GREEN = 'grn'
-
-
 def capture(light, lightColor): #Captures Image, Performs Background Subtraction, Determines Test Mode
     #settingsfile = "CameraSettings/colorSettings.xml"
     #try:
