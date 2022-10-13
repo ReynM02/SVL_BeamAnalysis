@@ -12,22 +12,24 @@ def capture(light, lightColor, exp): #Captures Image, Performs Background Subtra
     #try:
         with Vimba.get_instance() as vimba:
             cams = vimba.get_all_cameras()
-            print('cams obtained')
+            #print('cams obtained')
+            #print(exp)
             with cams[0] as cam:
-                print('cams[0] found')
+                #print('cams[0] found')
                 cam.load_settings("colorSettings.xml", PersistType.All)
-                exposure_time = cam.ExposureTime
-                exposure_time.set(exp)
-                print('color settings loaded')
+                #print('color settings loaded')
+                #print('cam got')
+                #exposure_time.set(500)
+                #print('expt set')
                 frame = cam.get_frame()
-                print('frame grabbed')
+                #print('frame grabbed')
                 #bgImage = frame.as_opencv_image()
                 #ToDo: Trigger Light
                 #frame = cam.get_frame()
                 #fgImage = frame.as_opencv_image()
                 test = False
                 image = frame.as_opencv_image()
-                print('image converted to opencv')
+                #print('image converted to opencv')
     #except:
      #   image = cv2.imread("test_1.PNG")
       #  image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)

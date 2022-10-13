@@ -130,8 +130,9 @@ while True:
         light = values["-LIGHT-"]
         lightSize = values["-SIZE-"]
         color = values["-COLORS-"]
+        lens = values["-LENS-"]
         try:
-            frame, horiz_x, horiz_y, vert_x, vert_y = SLA.measure(light, lightSize, color)
+            frame, horiz_x, horiz_y, vert_x, vert_y = SLA.measure(light, lightSize, color, lens)
             invalConfig = False
         except:
             invalConfig = True
