@@ -1,6 +1,4 @@
 
-from email.errors import InvalidMultipartContentTransferEncodingDefect
-from msilib.schema import Error
 import PySimpleGUI as sg
 import cv2
 from matplotlib import use as use_agg
@@ -56,6 +54,12 @@ linear_size = [
     '600'
 ]
 
+lens_config = [
+    'S',
+    'N',
+    'W'
+]
+
 other_size = [
     '150',
     '225'
@@ -68,7 +72,8 @@ colors = [
 ]
 
 lists = [
-    [sg.Combo(lights, default_value='LSR', key="-LIGHT-", enable_events=True)],
+    [sg.Combo(lights, default_value='LSR', key="-LIGHT-", enable_events=True),
+     sg.Combo(lens_config, default_value='S', key="-LENS-", enable_events=True)],
     [sg.Combo(linear_size, default_value='300', key="-SIZE-", enable_events=True)],
     [sg.Combo(colors, default_value='WHI', key="-COLORS-")]
 ]
@@ -132,7 +137,7 @@ while True:
             invalConfig = True
 
         if invalConfig == True:
-            sg.popup('Error: Invalid Light Configuration, Verify Selected Configuration.', title="Error: InvalLightConfig", modal=True)
+            sg.popup('Error: Configuration Error, Verify Selected Configuration.', title="Error: LightConfigErr", modal=True)
         else:    
             plot_figure(1, horiz_x, horiz_y)
             plot_figure(2, vert_x, vert_y)

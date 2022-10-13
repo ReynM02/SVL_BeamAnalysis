@@ -8,15 +8,16 @@ import lut
 import json
 
 
-def capture(light, lightColor): #Captures Image, Performs Background Subtraction, Determines Test Mode
-    #settingsfile = "CameraSettings/colorSettings.xml"
+def capture(light, lightColor, exp): #Captures Image, Performs Background Subtraction, Determines Test Mode
     #try:
         with Vimba.get_instance() as vimba:
             cams = vimba.get_all_cameras()
             print('cams obtained')
             with cams[0] as cam:
-                print('cam[0] found')
+                print('cams[0] found')
                 cam.load_settings("colorSettings.xml", PersistType.All)
+                exposure_time = cam.ExposureTime
+                exposure_time.set(exp)
                 print('color settings loaded')
                 frame = cam.get_frame()
                 print('frame grabbed')
@@ -51,8 +52,8 @@ def capture(light, lightColor): #Captures Image, Performs Background Subtraction
         return image, test
 #End Capture()
    
-def loadConfig(light, size, color):
-    filePath = "configs/"+light+size+"-"+color+".json"
+def loadConfig(light, size, color, lens):
+    filePath = "configs/"+light+size+"-"+color+"-"+lens+".json"
     try:
         with open(filePath, 'r') as file:
             data = json.load(file)
@@ -62,15 +63,15 @@ def loadConfig(light, size, color):
     return data
 #End loadConfig()
 
-def measure(light, size, color):
+def measure(light, size, color, lens):
     # Load Config for Light
-    data = loadConfig(light, size, color)
+    data = loadConfig(light, size, color, lens)
     
     if data == 1:
         return None
 
     # Obtain Image
-    image, test = capture(data["light"], data["color"])
+    image, test = capture(data["light"], data["color"], data["exposure"])
 
     # Grab Lut Exported From Zemax 
     zemaxLut = lut.finalLut
@@ -195,15 +196,15 @@ def measure(light, size, color):
             cv2.putText(image, "centroid", (cX - 25, cY - 25),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 2)
 
             # Arrange and plot cross section data using MatPlotLib
-            figure, axis = plt.subplots(1, 2)
+           # figure, axis = plt.subplots(1, 2)
             horiz_x = np.array(range(maxVal_2-minVal))
             horiz_y = horizontal_profile
             vert_x = np.array(range(otherIndex[0][-1]-otherIndex[0][0]))
             vert_y = vertical_profile
-            axis[0].plot(horiz_x, horiz_y, color = "red")
-            axis[0].set_title("Horizontal Profile")
-            axis[1].plot(vert_x, vert_y, color = "blue")
-            axis[1].set_title("Vertical Profile")
+           # axis[0].plot(horiz_x, horiz_y, color = "red")
+           # axis[0].set_title("Horizontal Profile")
+           # axis[1].plot(vert_x, vert_y, color = "blue")
+           # axis[1].set_title("Vertical Profile")
 
             # Setup Text Additions 
             # - Pass/Fail values
@@ -262,5 +263,3 @@ def measure(light, size, color):
                 cv2.putText(image, "TEST IMAGE", (150,440), cv2.FONT_HERSHEY_SIMPLEX, 5, (0,0,0), 6)
     return image, horiz_x, horiz_y, vert_x, vert_y
 #End measure()
-
-measure('JWL', '225', 'WHI')
