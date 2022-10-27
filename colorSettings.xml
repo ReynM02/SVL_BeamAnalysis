@@ -34,7 +34,7 @@
         <Feature Name="ExposureAutoMax" Type="Integer" Access="R/W">500000</Feature>
         <Feature Name="ExposureAutoMin" Type="Integer" Access="R/W">45</Feature>
         <Feature Name="ExposureAutoOutliers" Type="Integer" Access="R/W">0</Feature>
-        <Feature Name="ExposureAutoRate" Type="Integer" Access="R/W">100</Feature>
+        <Feature Name="ExposureAutoRate" Type="Integer" Access="R/W">870</Feature>
         <Feature Name="ExposureAutoTarget" Type="Integer" Access="R/W">50</Feature>
         <Feature Name="ExposureMode" Type="Enumeration" Access="R/W">Timed</Feature>
         <Feature Name="ExposureTimeAbs" Type="Float" Access="R/W">184.000000</Feature>

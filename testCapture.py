@@ -1,13 +1,7 @@
-from tkinter import W
 from cv2 import split
 from vimba import *
 import cv2
-import numpy as np
-import matplotlib.pyplot as plt
-import datetime
 from array import *
-import lut
-import json
 
 with Vimba.get_instance() as vimba:
     cams = vimba.get_all_cameras()
@@ -17,7 +11,7 @@ with Vimba.get_instance() as vimba:
         cam.load_settings("colorSettings.xml", PersistType.All)
         print('color settings loaded')
         frame = cam.get_frame()
-        frame.convert_pixel_format(PixelFormat.Bgr8)
+        #frame.convert_pixel_format(PixelFormat.Rgb8)
         print('frame grabbed')
         #bgImage = frame.as_opencv_image()
         #ToDo: Trigger Light
