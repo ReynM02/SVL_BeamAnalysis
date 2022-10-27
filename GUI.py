@@ -145,11 +145,11 @@ while True:
         
         print(light, color, lens)
 
-        #try:
-        frame, horiz, vert = SLA.measure(light, color, lens)
-        invalConfig = False
-        #except:
-            #invalConfig = True
+        try:
+            frame, horiz, vert = SLA.measure(light, color, lens)
+            invalConfig = False
+        except:
+            invalConfig = True
 
         if invalConfig == True:
             sg.popup('Error: Configuration Error, Verify Selected Configuration.', title="Error: LightConfigErr", modal=True)
