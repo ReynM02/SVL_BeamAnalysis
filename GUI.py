@@ -1,12 +1,11 @@
 
-from email.errors import InvalidMultipartContentTransferEncodingDefect
-from msilib.schema import Error
 import PySimpleGUI as sg
 import cv2
 from matplotlib import use as use_agg
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import measureLight as SLA # Smart Light Analyzer
+buffer = 0
 
 # Pack the Graphs from MatPlotLib to TKinter
 def pack_figure(graph, figure):
@@ -56,6 +55,12 @@ linear_size = [
     '600'
 ]
 
+lens_config = [
+    'S',
+    'N',
+    'W'
+]
+
 other_size = [
     '150',
     '225'
@@ -68,7 +73,8 @@ colors = [
 ]
 
 lists = [
-    [sg.Combo(lights, default_value='LSR', key="-LIGHT-", enable_events=True)],
+    [sg.Combo(lights, default_value='LSR', key="-LIGHT-", enable_events=True),
+     sg.Combo(lens_config, default_value='S', key="-LENS-", enable_events=True)],
     [sg.Combo(linear_size, default_value='300', key="-SIZE-", enable_events=True)],
     [sg.Combo(colors, default_value='WHI', key="-COLORS-")]
 ]
@@ -76,7 +82,8 @@ lists = [
 image_column = [
     [sg.Text("\nBeam Analysis", size=(160, 5), justification="center", font=100)],
     [sg.Image(filename="", key="-IMAGE-", size=(100, 100), expand_x=True)],
-    [sg.Column(lists)],
+    [sg.Text("Light P/N:"), sg.InputText(enable_events=True, size=(20, 5), key="-LIGHT_STRING-", do_not_clear=True)],
+    #[sg.Column(lists)],
     [sg.Button("Measure", size=(10,1), key="-MEASURE-")]
 ]
 
@@ -122,25 +129,48 @@ while True:
             window['-GRAPHS-'].update(visible=False)
             hidden = True
     elif event == "-MEASURE-":
-        light = values["-LIGHT-"]
-        lightSize = values["-SIZE-"]
-        color = values["-COLORS-"]
+        #light = values["-LIGHT-"]
+        #lightSize = values["-SIZE-"]
+        #color = values["-COLORS-"]
+        #lens = values["-LENS-"]
+        light_string = values["-LIGHT_STRING-"]
+        splitString = light_string.split('-')
+        print(splitString)
+        light = splitString[0]
+        color = splitString[1]
         try:
-            frame, horiz_x, horiz_y, vert_x, vert_y = SLA.measure(light, lightSize, color)
-            invalConfig = False
-        except:
-            invalConfig = True
+            lens = splitString[2]
+        except IndexError:
+            lens = 'S'
+        
+        print(light, color, lens)
+
+        #try:
+        frame, horiz, vert = SLA.measure(light, color, lens)
+        invalConfig = False
+        #except:
+            #invalConfig = True
 
         if invalConfig == True:
-            sg.popup('Error: Invalid Light Configuration, Verify Selected Configuration.', title="Error: InvalLightConfig", modal=True)
+            sg.popup('Error: Configuration Error, Verify Selected Configuration.', title="Error: LightConfigErr", modal=True)
         else:    
-            plot_figure(1, horiz_x, horiz_y)
-            plot_figure(2, vert_x, vert_y)
-    if event == "-LIGHT-":
+            plot_figure(1, horiz[0], horiz[1])
+            plot_figure(2, vert[0], vert[1])
+    elif event == "-LIGHT-":
         if values["-LIGHT-"] == 'JWL':
             window["-SIZE-"].update(values=other_size)
         else:
             window["-SIZE-"].update(values=linear_size)
+    elif event == "-LIGHT_STRING-":
+        light_string = values["-LIGHT_STRING-"]
+        #print(light_string)
+        buffer = buffer + 1
+        if buffer == 4:
+            #print(buffer)
+            if 'SVL' in light_string:
+                #print("not PN")
+                window["-LIGHT_STRING-"].update(value='')
+            buffer = 0
 
 
     imgbytes = cv2.imencode(".png", frame)[1].tobytes()

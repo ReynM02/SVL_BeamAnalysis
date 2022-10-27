@@ -8,10 +8,10 @@
     </Logging>
 </SettingsStruct>
 <CameraSettings CameraID="DEV_000F314CFA8D" CameraModel="Manta_G-095C (E0020513)" FeatureCount="215">
-    <FeatureGroup Count="78">
+    <FeatureGroup Count="72">
         <Feature Name="AcquisitionFrameCount" Type="Integer" Access="R/W">1</Feature>
         <Feature Name="AcquisitionFrameRateAbs" Type="Float" Access="R/W">37.943462</Feature>
-        <Feature Name="AcquisitionMode" Type="Enumeration" Access="R/W">TriggerSoftware</Feature>
+        <Feature Name="AcquisitionMode" Type="Enumeration" Access="R/W">Continuous</Feature>
         <Feature Name="BalanceWhiteAuto" Type="Enumeration" Access="R/W">Off</Feature>
         <Feature Name="BalanceWhiteAutoAdjustTol" Type="Integer" Access="R/W">5</Feature>
         <Feature Name="BalanceWhiteAutoRate" Type="Integer" Access="R/W">100</Feature>
@@ -20,7 +20,6 @@
         <Feature Name="BinningVertical" Type="Integer" Access="R/W">1</Feature>
         <Feature Name="BlackLevel" Type="Float" Access="R/W">0.000000</Feature>
         <Feature Name="BlackLevelSelector" Type="Enumeration" Access="R/W">All</Feature>
-        <Feature Name="ChunkModeActive" Type="Boolean" Access="R/W">False</Feature>
         <Feature Name="ColorTransformationMode" Type="Enumeration" Access="R/W">Manual</Feature>
         <Feature Name="DSPSubregionBottom" Type="Integer" Access="R/W">734</Feature>
         <Feature Name="DSPSubregionLeft" Type="Integer" Access="R/W">0</Feature>
@@ -35,20 +34,18 @@
         <Feature Name="ExposureAutoMax" Type="Integer" Access="R/W">500000</Feature>
         <Feature Name="ExposureAutoMin" Type="Integer" Access="R/W">45</Feature>
         <Feature Name="ExposureAutoOutliers" Type="Integer" Access="R/W">0</Feature>
-        <Feature Name="ExposureAutoRate" Type="Integer" Access="R/W">100</Feature>
+        <Feature Name="ExposureAutoRate" Type="Integer" Access="R/W">870</Feature>
         <Feature Name="ExposureAutoTarget" Type="Integer" Access="R/W">50</Feature>
         <Feature Name="ExposureMode" Type="Enumeration" Access="R/W">Timed</Feature>
         <Feature Name="ExposureTimeAbs" Type="Float" Access="R/W">184.000000</Feature>
         <Feature Name="GVCPCmdRetries" Type="Integer" Access="R/W">5</Feature>
         <Feature Name="GVCPCmdTimeout" Type="Integer" Access="R/W">250</Feature>
         <Feature Name="GVSPBurstSize" Type="Integer" Access="R/W">1</Feature>
-        <Feature Name="GVSPDriver" Type="Enumeration" Access="R/W">Filter</Feature>
         <Feature Name="GVSPHostReceiveBuffers" Type="Integer" Access="R/W">1024</Feature>
         <Feature Name="GVSPMaxLookBack" Type="Integer" Access="R/W">30</Feature>
         <Feature Name="GVSPMaxRequests" Type="Integer" Access="R/W">1</Feature>
         <Feature Name="GVSPMaxWaitSize" Type="Integer" Access="R/W">100</Feature>
         <Feature Name="GVSPMissingSize" Type="Integer" Access="R/W">256</Feature>
-        <Feature Name="GVSPPacketSize" Type="Integer" Access="R/W">1500</Feature>
         <Feature Name="GVSPTiltingSize" Type="Integer" Access="R/W">100</Feature>
         <Feature Name="GVSPTimeout" Type="Integer" Access="R/W">70</Feature>
         <Feature Name="Gain" Type="Float" Access="R/W">5.000000</Feature>
@@ -63,20 +60,17 @@
         <Feature Name="Gamma" Type="Float" Access="R/W">1.000000</Feature>
         <Feature Name="GevHeartbeatInterval" Type="Integer" Access="R/W">1450</Feature>
         <Feature Name="GevHeartbeatTimeout" Type="Integer" Access="R/W">3000</Feature>
-        <Feature Name="GevSCPSPacketSize" Type="Integer" Access="R/W">1500</Feature>
         <Feature Name="Height" Type="Integer" Access="R/W">734</Feature>
         <Feature Name="Hue" Type="Float" Access="R/W">2.000000</Feature>
         <Feature Name="IrisAutoTarget" Type="Integer" Access="R/W">50</Feature>
         <Feature Name="IrisMode" Type="Enumeration" Access="R/W">Disabled</Feature>
         <Feature Name="IrisVideoLevelMax" Type="Integer" Access="R/W">110</Feature>
         <Feature Name="IrisVideoLevelMin" Type="Integer" Access="R/W">90</Feature>
-        <Feature Name="MulticastEnable" Type="Boolean" Access="R/W">False</Feature>
-        <Feature Name="MulticastIPAddress" Type="Integer" Access="R/W">823132143</Feature>
         <Feature Name="OffsetX" Type="Integer" Access="R/W">0</Feature>
         <Feature Name="OffsetY" Type="Integer" Access="R/W">0</Feature>
         <Feature Name="PixelFormat" Type="Enumeration" Access="R/W">BayerRG8</Feature>
         <Feature Name="RecorderPreEventCount" Type="Integer" Access="R/W">0</Feature>
-        <Feature Name="Saturation" Type="Float" Access="R/W">1.000400</Feature>
+        <Feature Name="Saturation" Type="Float" Access="R/W">1.000300</Feature>
         <Feature Name="StreamBufferHandlingMode" Type="Enumeration" Access="R/W">Default</Feature>
         <Feature Name="StreamBytesPerSecond" Type="Integer" Access="R/W">115000000</Feature>
         <Feature Name="StreamFrameRateConstrain" Type="Boolean" Access="R/W">True</Feature>
@@ -90,8 +84,8 @@
     </FeatureGroup>
     <SelectorGroup Count="6" SelectedFeatures="13">
         <Selector Name="BalanceRatioSelector" Type="Enumeration" SelectedFeatures="1">
-            <SelectorCombination Entry="Red" Feature="BalanceRatioAbs" Type="Float">1.830000</SelectorCombination>
-            <SelectorCombination Entry="Blue" Feature="BalanceRatioAbs" Type="Float">2.290000</SelectorCombination>
+            <SelectorCombination Entry="Red" Feature="BalanceRatioAbs" Type="Float">1.970000</SelectorCombination>
+            <SelectorCombination Entry="Blue" Feature="BalanceRatioAbs" Type="Float">2.220000</SelectorCombination>
         </Selector>
         <Selector Name="ColorTransformationValueSelector" Type="Enumeration" SelectedFeatures="1">
             <SelectorCombination Entry="Gain00" Feature="ColorTransformationValue" Type="Float">1.077540</SelectorCombination>
@@ -165,11 +159,12 @@
             <SelectorCombination Entry="AcquisitionRecord" Feature="TriggerActivation" Type="Enumeration">RisingEdge</SelectorCombination>
         </Selector>
     </SelectorGroup>
-    <IgnoredFeatures Count="119">
+    <IgnoredFeatures Count="125">
         <Feature Name="AcquisitionAbort" Type="Command" Access="W"></Feature>
         <Feature Name="AcquisitionFrameRateLimit" Type="Float" Access="R"></Feature>
         <Feature Name="AcquisitionStart" Type="Command" Access="W"></Feature>
         <Feature Name="AcquisitionStop" Type="Command" Access="W"></Feature>
+        <Feature Name="ChunkModeActive" Type="Boolean" Access="R"></Feature>
         <Selector Name="ColorTransformationSelector" Type="Enumeration" SelectedFeatures="1"></Selector>
         <Feature Name="DeviceFirmwareVersion" Type="String" Access="R"></Feature>
         <Feature Name="DeviceID" Type="String" Access="R"></Feature>
@@ -226,8 +221,10 @@
         <Feature Name="FirmwareVerBuild" Type="Integer" Access="R"></Feature>
         <Feature Name="FirmwareVerMajor" Type="Integer" Access="R"></Feature>
         <Feature Name="FirmwareVerMinor" Type="Integer" Access="R"></Feature>
-        <Feature Name="GVSPAdjustPacketSize" Type="Command" Access="R/W"></Feature>
+        <Feature Name="GVSPAdjustPacketSize" Type="Command" Access="R"></Feature>
+        <Feature Name="GVSPDriver" Type="Enumeration" Access="R"></Feature>
         <Feature Name="GVSPFilterVersion" Type="String" Access="R"></Feature>
+        <Feature Name="GVSPPacketSize" Type="Integer" Access="R"></Feature>
         <Feature Name="GevCurrentDefaultGateway" Type="Integer" Access="R"></Feature>
         <Feature Name="GevCurrentIPAddress" Type="Integer" Access="R"></Feature>
         <Feature Name="GevCurrentSubnetMask" Type="Integer" Access="R"></Feature>
@@ -236,6 +233,7 @@
         <Feature Name="GevPersistentDefaultGateway" Type="Integer" Access="R"></Feature>
         <Feature Name="GevPersistentIPAddress" Type="Integer" Access="R"></Feature>
         <Feature Name="GevPersistentSubnetMask" Type="Integer" Access="R"></Feature>
+        <Feature Name="GevSCPSPacketSize" Type="Integer" Access="R"></Feature>
         <Feature Name="GevTimestampControlLatch" Type="Command" Access="W"></Feature>
         <Feature Name="GevTimestampControlReset" Type="Command" Access="W"></Feature>
         <Feature Name="GevTimestampTickFrequency" Type="Integer" Access="R"></Feature>
@@ -254,6 +252,8 @@
         <Feature Name="LUTSelector" Type="Enumeration" Access="R/W"></Feature>
         <Feature Name="LUTSizeBytes" Type="Integer" Access="R"></Feature>
         <Feature Name="LUTValue" Type="Integer" Access="R/W"></Feature>
+        <Feature Name="MulticastEnable" Type="Boolean" Access="R"></Feature>
+        <Feature Name="MulticastIPAddress" Type="Integer" Access="R"></Feature>
         <Feature Name="NonImagePayloadSize" Type="Integer" Access="R"></Feature>
         <Feature Name="PayloadSize" Type="Integer" Access="R"></Feature>
         <Feature Name="SensorBits" Type="Integer" Access="R"></Feature>

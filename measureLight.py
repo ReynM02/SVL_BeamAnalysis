@@ -1,4 +1,5 @@
-from distutils.log import error
+from warnings import catch_warnings
+from cv2 import cvtColor
 from vimba import *
 import cv2
 import numpy as np
@@ -8,64 +9,91 @@ from array import *
 import lut
 import json
 
-def capture(light): #Captures Image, Performs Background Subtraction, Determines Test Mode
-    settingsfile = light + "Settings.xml"
+
+def capture(light, lightColor, exp): #Captures Image, Performs Background Subtraction, Determines Test Mode
     try:
         with Vimba.get_instance() as vimba:
             cams = vimba.get_all_cameras()
+            print('cams obtained')
+            #print(exp)
             with cams[0] as cam:
-                cam.load_settings(settingsfile)
-
+                print('cams[0] found')
+                cam.load_settings("colorSettings.xml", PersistType.All)
+                print('color settings loaded')
+                print('cam got')
+                #exposure_time.set(500)
+                #print('expt set')
                 frame = cam.get_frame()
-                bgImage = frame.as_opencv_image()
+                print('frame grabbed')
+                #bgImage = frame.as_opencv_image()
                 #ToDo: Trigger Light
-                frame = cam.get_frame()
-                fgImage = frame.as_opencv_image()
+                #frame = cam.get_frame()
+                #fgImage = frame.as_opencv_image()
                 test = False
+                image = frame.as_opencv_image()
+                print('image converted to opencv')
     except:
+        print('in except')
         image = cv2.imread("test_1.PNG")
+        print('image loaded')
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        print('image converted to mono')
         test = True
+        
     
-    if test == False:
-        image = cv2.absdiff(fgImage, bgImage)
+    #if test == False:
+    #    if lightColor == "WHI":
+     #       fgImage = cv2.cvtColor(fgImage, cv2.COLOR_RGB2GRAY)
+      #      bgImage = cv2.cvtColor(bgImage, cv2.COLOR_RGB2GRAY)
+       #     image = cv2.absdiff(fgImage, bgImage)
+        #elif lightColor == "470":
+        #    bgImage = cv2.split(bgImage)
+         #   fgImage = cv2.split(fgImage)
+          #  image = cv2.absdiff(fgImage[1], bgImage[1])
+        #elif lightColor == "625":
+         #   bgImage = cv2.split(bgImage)
+          #  fgImage = cv2.split(fgImage)
+           # image = cv2.absdiff(fgImage[3], bgImage[3])
 
-    return image, test
+        #image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        print('returned image')
+        return image, test
 #End Capture()
    
-def loadConfig(light, size, color):
-    filePath = "configs/"+light+size+"-"+color+".json"
+def loadConfig(light, color, lens):
+    filePath = "configs/"+light+"-"+color+"-"+lens+".json"
     try:
         with open(filePath, 'r') as file:
+            print("found config")
             data = json.load(file)
-        return data
     except FileNotFoundError as e:
         return 1
+
+    return data
 #End loadConfig()
 
-def measure(light, size, color):
+def measure(light, color, lens):
     # Load Config for Light
-    data = loadConfig(light, size, color)
+    data = loadConfig(light, color, lens)
     
     if data == 1:
         return None
 
-    # Obtain Image #
-    image, test = capture(data["light"])
+    # Obtain Image
+    image, test = capture(data["light"], data["color"], data["exposure"])
 
-    # Grab Lut Exported From Zemax #
+    # Grab Lut Exported From Zemax 
     zemaxLut = lut.finalLut
 
-    # Set Uniformity Value #
+    # Set Uniformity Value 
     uniformityValue = 255*0.8
 
-    # Set Pass/Fail Thresholds From Config #
+    ## -- Set Pass/Fail Thresholds From Config -- ##
     # - Intensity
     intensityHigh = data['intensityHigh']
     intensityLow = data['intensityLow']
     # - Symmetry
     symmetryGap = data['symmetry_gap']
-    #symmetryLow = data['symmetryLow']
     # - X Vlaue
     xHigh = data['xHigh']
     xLow = data['xLow']
@@ -78,22 +106,26 @@ def measure(light, size, color):
 
     # Blur The Image
     filteredImage = cv2.GaussianBlur(image,(15,15),0)
+    if test == False:
+        bwImage = cv2.cvtColor(filteredImage, cv2.COLOR_RGB2GRAY)
 
     # Create a Bianary Array, Where Pixels Within The 80% Uniformity Are 1, And Those Outside Are 0.
     # Essentially This is Blob Detection
-    ret,thresh = cv2.threshold(filteredImage,uniformityValue,255,0)
-
-    # Calculate The Moments of The Bianary Image
-    M = cv2.moments(thresh)
-
-    # Calculate X,Y Co-ordinates of Blob Centroid
     try:
+        ret,thresh = cv2.threshold(bwImage,uniformityValue,255,0)
+
+        # Calculate The Moments of The Bianary Image
+        M = cv2.moments(thresh)
+
+        # Calculate X,Y Co-ordinates of Blob Centroid
+        
         cX = int(M["m10"] / M["m00"])
         cY = int(M["m01"] / M["m00"])
     except:
         # No Moments Found, Set cX and cY to None
         cX = None
         cY = None
+    
 
     # If Blob is found: Continue Code, Else: Display Image
     if cX != None:
@@ -121,7 +153,7 @@ def measure(light, size, color):
                 col = minVal
                 col_max = maxVal_2
                 while col <= col_max:
-                    flux = flux + image[row-1][col-1]
+                    flux = flux + bwImage[row-1][col-1]
                     col = col+1
                 row = row+1
 
@@ -141,7 +173,7 @@ def measure(light, size, color):
             x = 0
             if x_end != 0:
                 while x_end >= x_start:
-                    horizontal_profile[x-1] = image[cY][x_end-1]
+                    horizontal_profile[x-1] = bwImage[cY][x_end-1]
                     x_end = x_end - 1
                     x=x+1
 
@@ -149,12 +181,13 @@ def measure(light, size, color):
             x = 0
             if y_end != 0:
                 while y_end >= y_start:
-                    vertical_profile[x-1] = image[y_end-1][cX]
+                    vertical_profile[x-1] = bwImage[y_end-1][cX]
                     y_end = y_end - 1
                     x=x+1
 
-            #Convert Image to RGB
-            image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+            if test == True:
+                #Convert Image to RGB
+                image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
             #Apply Custom LUT
             image = cv2.LUT(image, zemaxLut)
@@ -175,15 +208,13 @@ def measure(light, size, color):
             cv2.putText(image, "centroid", (cX - 25, cY - 25),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 2)
 
             # Arrange and plot cross section data using MatPlotLib
-            figure, axis = plt.subplots(1, 2)
             horiz_x = np.array(range(maxVal_2-minVal))
             horiz_y = horizontal_profile
             vert_x = np.array(range(otherIndex[0][-1]-otherIndex[0][0]))
             vert_y = vertical_profile
-            axis[0].plot(horiz_x, horiz_y, color = "red")
-            axis[0].set_title("Horizontal Profile")
-            axis[1].plot(vert_x, vert_y, color = "blue")
-            axis[1].set_title("Vertical Profile")
+
+            horiz = [horiz_x, horiz_y]
+            vert = [vert_x, vert_y]
 
             # Setup Text Additions 
             # - Pass/Fail values
@@ -215,7 +246,6 @@ def measure(light, size, color):
                 cv2.putText(image, "FAIL", (650,35), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2) 
 
             # -- Symmetry
-            #ToDo: Create a symmetry test
             if cY > symmetryLow and cY < symmetryHigh:
                 # Symmetry Passed
                 cv2.putText(image, "PASS", (650,70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2) 
@@ -238,8 +268,15 @@ def measure(light, size, color):
             else:
                 # Y Failed
                 cv2.putText(image, "FAIL", (650,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
-            
-            if test == True:
+    else:
+        if test == True:
+            image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        image = cv2.LUT(image, zemaxLut)
+        horiz = [1, 2]
+        horiz[0] = np.arange(1,11)
+        horiz[1] = 2 * horiz[0] + 5
+        vert = horiz
+        if test == True:
                 cv2.putText(image, "TEST IMAGE", (150,440), cv2.FONT_HERSHEY_SIMPLEX, 5, (0,0,0), 6)
-    return image, horiz_x, horiz_y, vert_x, vert_y
+    return image, horiz, vert
 #End measure()
