@@ -5,8 +5,13 @@ from matplotlib import use as use_agg
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import measureLight as SLA # Smart Light Analyzer
+import datetime
+import psutil
 buffer = 0
-
+user_list = psutil.users()
+user = user_list[0].name
+print(user)
+savePath = 'C:/Users/' + user + '/Documents/SmartLightAnalyzer'
 # Pack the Graphs from MatPlotLib to TKinter
 def pack_figure(graph, figure):
     canvas = FigureCanvasTkAgg(figure, graph.Widget)
@@ -83,6 +88,7 @@ image_column = [
     [sg.Text("\nBeam Analysis", size=(160, 5), justification="center", font=100)],
     [sg.Image(filename="", key="-IMAGE-", size=(100, 100), expand_x=True)],
     [sg.Text("Light P/N:"), sg.InputText(enable_events=True, size=(20, 5), key="-LIGHT_STRING-", do_not_clear=True)],
+    [sg.Text("Light S/N:"), sg.InputText(enable_events=True, size=(20, 5), key="-SERIAL_NUM-", do_not_clear=True)],
     #[sg.Column(lists)],
     [sg.Button("Measure", size=(10,1), key="-MEASURE-")]
 ]
@@ -129,11 +135,10 @@ while True:
             window['-GRAPHS-'].update(visible=False)
             hidden = True
     elif event == "-MEASURE-":
-        #light = values["-LIGHT-"]
-        #lightSize = values["-SIZE-"]
-        #color = values["-COLORS-"]
-        #lens = values["-LENS-"]
+        sysTime = datetime.datetime.now()
+        dateString = sysTime.strftime("%Y-%m-%d") + '_' + sysTime.strftime("%H:%M:%S")
         light_string = values["-LIGHT_STRING-"]
+        serialNum = values["-SERIAL_NUM-"]
         splitString = light_string.split('-')
         print(splitString)
         light = splitString[0]
@@ -156,6 +161,7 @@ while True:
         else:    
             plot_figure(1, horiz[0], horiz[1])
             plot_figure(2, vert[0], vert[1])
+        cv2.imwrite(""+light_string+"_"+serialNum+"_"+dateString+".jpg", frame)
     elif event == "-LIGHT-":
         if values["-LIGHT-"] == 'JWL':
             window["-SIZE-"].update(values=other_size)
