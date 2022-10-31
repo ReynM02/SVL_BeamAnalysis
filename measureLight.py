@@ -30,6 +30,7 @@ def capture(light, lightColor, exp): #Captures Image, Performs Background Subtra
                 #frame = cam.get_frame()
                 #fgImage = frame.as_opencv_image()
                 test = False
+                frame.convert_pixel_format(PixelFormat.Bgr8)
                 image = frame.as_opencv_image()
                 print('image converted to opencv')
     except:
@@ -56,8 +57,8 @@ def capture(light, lightColor, exp): #Captures Image, Performs Background Subtra
            # image = cv2.absdiff(fgImage[3], bgImage[3])
 
         #image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        print('returned image')
-        return image, test
+    print('returned image')
+    return image, test
 #End Capture()
    
 def loadConfig(light, color, lens):
@@ -81,10 +82,10 @@ def measure(light, color, lens):
 
     # Obtain Image
     image, test = capture(data["light"], data["color"], data["exposure"])
-
+    print("received img")
     # Grab Lut Exported From Zemax 
     zemaxLut = lut.finalLut
-
+    
     # Set Uniformity Value 
     uniformityValue = 255*0.8
 
@@ -107,16 +108,17 @@ def measure(light, color, lens):
     # Blur The Image
     filteredImage = cv2.GaussianBlur(image,(15,15),0)
     if test == False:
-        bwImage = cv2.cvtColor(filteredImage, cv2.COLOR_RGB2GRAY)
-
+        print('test false')
+        bwImage = cv2.cvtColor(filteredImage, cv2.COLOR_BGR2GRAY)
+        print ('converted bwImage')
     # Create a Bianary Array, Where Pixels Within The 80% Uniformity Are 1, And Those Outside Are 0.
     # Essentially This is Blob Detection
     try:
         ret,thresh = cv2.threshold(bwImage,uniformityValue,255,0)
-
+        print("thresh img good")
         # Calculate The Moments of The Bianary Image
         M = cv2.moments(thresh)
-
+        print("moments found")
         # Calculate X,Y Co-ordinates of Blob Centroid
         
         cX = int(M["m10"] / M["m00"])
@@ -125,7 +127,7 @@ def measure(light, color, lens):
         # No Moments Found, Set cX and cY to None
         cX = None
         cY = None
-    
+        print('no moments found')
 
     # If Blob is found: Continue Code, Else: Display Image
     if cX != None:
@@ -270,7 +272,7 @@ def measure(light, color, lens):
                 cv2.putText(image, "FAIL", (650,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
     else:
         if test == True:
-            image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+            image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
         image = cv2.LUT(image, zemaxLut)
         horiz = [1, 2]
         horiz[0] = np.arange(1,11)
