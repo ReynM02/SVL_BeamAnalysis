@@ -7,6 +7,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import measureLight as SLA # Smart Light Analyzer
 import datetime
 import psutil
+import os
+
 buffer = 0
 user_list = psutil.users()
 user = user_list[0].name
@@ -136,13 +138,16 @@ while True:
             hidden = True
     elif event == "-MEASURE-":
         sysTime = datetime.datetime.now()
-        dateString = sysTime.strftime("%Y-%m-%d") + '_' + sysTime.strftime("%H:%M:%S")
+        dateString = sysTime.strftime("%Y-%m-%d") + '_' + sysTime.strftime("%H%M%S")
         light_string = values["-LIGHT_STRING-"]
         serialNum = values["-SERIAL_NUM-"]
         splitString = light_string.split('-')
-        print(splitString)
-        light = splitString[0]
-        color = splitString[1]
+        #print(splitString)
+        try:
+            light = splitString[0]
+            color = splitString[1]
+        except IndexError:
+            sg.popup('Error: Invalid Configuration, Enter Light P/N and S/N.', title="Error: InvalConfgErr", modal=True)
         try:
             lens = splitString[2]
         except IndexError:
@@ -151,7 +156,7 @@ while True:
         print(light, color, lens)
 
         try:
-            frame, horiz, vert = SLA.measure(light, color, lens)
+            frame, horiz, vert, passFail = SLA.measure(light, color, lens)
             invalConfig = False
         except:
             invalConfig = True
@@ -161,24 +166,38 @@ while True:
         else:    
             plot_figure(1, horiz[0], horiz[1])
             plot_figure(2, vert[0], vert[1])
-        cv2.imwrite(""+light_string+"_"+serialNum+"_"+dateString+".jpg", frame)
+        #frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+            os.makedirs(savePath+'/Images')
+            os.makedirs(savePath+'/Data')
+        imgPath = "C:/Users/matt.reynolds/Documents/SmartLightAnalyzer/Images/"
+        print (os.path.join(imgPath, light_string+'_'+serialNum+'_'+dateString+'.jpg'))
+        isWritten = cv2.imwrite(imgPath+light_string+'_'+serialNum+'_'+dateString+'.jpg', frame)
+
+        if isWritten:
+            print("image saved")
+        else:
+            print("image not saved")
+
     elif event == "-LIGHT-":
         if values["-LIGHT-"] == 'JWL':
             window["-SIZE-"].update(values=other_size)
         else:
             window["-SIZE-"].update(values=linear_size)
+
     elif event == "-LIGHT_STRING-":
         light_string = values["-LIGHT_STRING-"]
-        #print(light_string)
-        buffer = buffer + 1
-        if buffer == 4:
-            #print(buffer)
-            if 'SVL' in light_string:
-                #print("not PN")
-                window["-LIGHT_STRING-"].update(value='')
-            buffer = 0
 
+        if 'SVL' in light_string:
+            window["-LIGHT_STRING-"].update(value='')
 
+    elif event == "-SERIAL_NUM-":
+        serial_num = values["-SERIAL_NUM-"]
+
+        if 'S' not in serial_num:
+            window["-SERIAL_NUM-"].update(value='')
+        
     imgbytes = cv2.imencode(".png", frame)[1].tobytes()
     window["-IMAGE-"].update(data=imgbytes)
 
