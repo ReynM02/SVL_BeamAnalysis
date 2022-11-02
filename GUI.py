@@ -9,6 +9,7 @@ import measureLight as SLA # Smart Light Analyzer
 import datetime
 import psutil
 import os
+from csv import writer
 
 buffer = 0
 user_list = psutil.users()
@@ -34,6 +35,13 @@ def plot_figure(index, x, y):
     plt.plot(x, y)                  # Plot y versus x as lines and/or markers
     fig.canvas.draw()               # Re-Draws Graph 
 
+def append_list_as_row(file_name, list_of_elem):
+    # Open file in append mode
+    with open(file_name, 'a+', newline='') as write_obj:
+        # Create a writer object from csv module
+        csv_writer = writer(write_obj)
+        # Add contents of list as last row in the csv file
+        csv_writer.writerow(list_of_elem)
 
 fig1 = plt.figure(1)                # Create a new figure
 ax1 = plt.subplot(111)              # Add a subplot to the current figure
@@ -125,7 +133,10 @@ plot_figure(2, x, y)
 #Initial Image Holder
 imgbytes = cv2.imencode(".png", frame)[1].tobytes()
 window["-IMAGE-"].update(data=imgbytes)
+date = datetime.datetime.now()
+month, day, year = date.month, date.day, date.year
 
+print(month, day, year)
 
 ### --- Main Loop --- ###
 while True:   
@@ -186,7 +197,10 @@ while True:
 
         imgbytes = cv2.imencode(".png", frame)[1].tobytes()
         window["-IMAGE-"].update(data=imgbytes)
-
+        csvPath = savePath + '/Data/' + str(day) + '-' + str(month) + '-' + str(year) + '_Light_Measurements.csv'
+        rowData = [light_string, serial_num]
+        rowData.extend(passFail)
+        append_list_as_row(csvPath, rowData)
         sg.popup(str(passFail), title='Measurment Data', modal=False)
 
     elif event == "-LIGHT-":
