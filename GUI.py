@@ -1,7 +1,8 @@
 
 import PySimpleGUI as sg
 import cv2
-from matplotlib import use as use_agg
+import matplotlib
+matplotlib.use('TKAgg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import measureLight as SLA # Smart Light Analyzer
@@ -41,7 +42,7 @@ ax2 = plt.subplot(111)              # Add a subplot to the current figure
 hidden = True
 
 
-use_agg('TkAgg')
+
 sg.theme("DarkGrey2")
 
 buttons = [
@@ -121,6 +122,9 @@ x = 0
 y = 0
 plot_figure(1, x, y)
 plot_figure(2, x, y)
+#Initial Image Holder
+imgbytes = cv2.imencode(".png", frame)[1].tobytes()
+window["-IMAGE-"].update(data=imgbytes)
 
 
 ### --- Main Loop --- ###
@@ -180,6 +184,11 @@ while True:
         else:
             print("image not saved")
 
+        imgbytes = cv2.imencode(".png", frame)[1].tobytes()
+        window["-IMAGE-"].update(data=imgbytes)
+
+        sg.popup(str(passFail), title='Measurment Data', modal=False)
+
     elif event == "-LIGHT-":
         if values["-LIGHT-"] == 'JWL':
             window["-SIZE-"].update(values=other_size)
@@ -196,10 +205,7 @@ while True:
         serial_num = values["-SERIAL_NUM-"]
 
         if 'S' not in serial_num:
-            window["-SERIAL_NUM-"].update(value='')
-        
-    imgbytes = cv2.imencode(".png", frame)[1].tobytes()
-    window["-IMAGE-"].update(data=imgbytes)
+            window["-SERIAL_NUM-"].update(value='')       
 
 window.close()
 

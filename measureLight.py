@@ -131,7 +131,7 @@ def measure(light, color, lens):
 
     # If Blob is found: Continue Code, Else: Display Image
     if cX != None:
-
+        print("blob found")
         # Create an Array of Pixel Locations (x,y) For Pixels With an Intensity
         # Greater Than or Equal to uniformityValue  
         otherIndex = np.where(filteredImage >= uniformityValue)
@@ -271,6 +271,7 @@ def measure(light, color, lens):
                 # Y Failed
                 cv2.putText(image, "FAIL", (650,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
     else:
+        print("blob not found")
         if test == True:
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
         image = cv2.LUT(image, zemaxLut)
@@ -280,5 +281,9 @@ def measure(light, color, lens):
         vert = horiz
         if test == True:
                 cv2.putText(image, "TEST IMAGE", (150,440), cv2.FONT_HERSHEY_SIMPLEX, 5, (0,0,0), 6)
-    return image, horiz, vert
+        flux = cY = horiz_length = vert_length = 0 
+        
+
+        passFail = [flux, cY, horiz_length, vert_length]
+    return image, horiz, vert, passFail
 #End measure()
