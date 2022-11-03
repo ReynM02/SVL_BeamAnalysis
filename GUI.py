@@ -167,7 +167,7 @@ while True:
             lens = splitString[2]
         except IndexError:
             lens = 'S'
-        
+
         print(light, color, lens)
 
         try:
