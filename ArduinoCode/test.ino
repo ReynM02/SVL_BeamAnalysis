@@ -1,22 +1,41 @@
+int NPNPin = 7; // Pin used to trigger NPN
+int camPin = 4; 
+int expTime = 1; // Exposure time of camera; On time of light
+
 void setup() {
-  Serial.begin(9600); // Set Baud Rate for Serial Communication
-  Serial.println("Serial Started: Waiting for input");
+    pinMode(NPNPin, OUTPUT);
+    pinMode(camPin, OUTPUT);
+    digitalWrite(camPin, HIGH);
+    Serial.begin(9600); // Set Baud Rate for Serial Communication
+    Serial.println("Serial Started: Waiting for input");
 }//end setup()
 
-/**FUNCTION PROTOTYPES - Measurement Protocols**/
+/**FUNCTION PROTOTYPES**/
+// - Measurement Protocols
 int contMode();     // Continuous Mode
 int overDrive();    // OverDrive Mode
 int multiDrive();   // MultiDrive Mode
 int dubOverDrive(); // Double OverDrive Mode
+// - Basic Functions
+void triggerCam();
 
-char input = 0;
+
+String input = "";
 String outString = "";
+char mode = 0;
 
 void loop() {
   if (Serial.available() > 0){
-    input = Serial.read();
-    if(input != '\n'){
-        switch (input)
+    input = Serial.readString();
+    //Serial.println(input);
+    mode = input.charAt(0);
+    //Serial.println(mode);
+    input.remove(0,1);
+    //Serial.println(input);
+    expTime = input.toInt();
+    //Serial.println(expTime);
+    if(mode != '\n'){
+        switch (mode)
         {
         case 'C': // Continuous Mode
             Serial.println("Continuous");
@@ -46,8 +65,20 @@ void loop() {
 }//end loop()
 
 
-/**USER DEFINED FUNCTIONS - Measurement Protocols**/
+/**USER DEFINED FUNCTIONS**/
+// - Basic Functions
+void triggerCam(){
+    digitalWrite(camPin, LOW);
+    delay(expTime);
+    digitalWrite(camPin, HIGH);
+}
+// - Measurement Protocols
 int contMode(){
+    digitalWrite(NPNPin, HIGH);
+    //delay(10);
+    triggerCam();
+    //delay(1);
+    digitalWrite(NPNPin, LOW);
     return 10;
 }//end contMode()
 

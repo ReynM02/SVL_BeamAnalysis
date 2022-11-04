@@ -1,14 +1,17 @@
-from warnings import catch_warnings
-from cv2 import cvtColor
 from vimba import *
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 import datetime
 from array import *
 import lut
 import json
+import serial
+import time
 
+arduino = serial.Serial('COM8', 9600)
+time.sleep(1)
+ready = arduino.read_all()
+print(ready)
 
 def capture(light, lightColor, exp): #Captures Image, Performs Background Subtraction, Determines Test Mode
     try:
@@ -60,7 +63,31 @@ def capture(light, lightColor, exp): #Captures Image, Performs Background Subtra
     print('returned image')
     return image, test
 #End Capture()
-   
+
+def CaptureExt(exp):
+    print("in CaptureExt()")
+    #try:
+    msg = 'C' + str(exp)
+    print(msg)
+    msgbyte = bytes(msg, 'utf-8')
+    print(msgbyte)
+    arduino.write(msgbyte)
+    print("written to arduino")
+    image = cv2.imread("test_1.PNG")
+    print("cam triggered test image loaded")
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    test = True
+    #except:
+     #   print('in except')
+      #  image = cv2.imread("test_1.PNG")
+       # print('image loaded')
+       # image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+       # print('image converted to mono')
+       # test = True
+
+    return image, test
+#End CaptureExt() 
+
 def loadConfig(light, color, lens):
     filePath = "configs/"+light+"-"+color+"-"+lens+".json"
     try:
@@ -81,7 +108,8 @@ def measure(light, color, lens):
         return None
 
     # Obtain Image
-    image, test = capture(data["light"], data["color"], data["exposure"])
+    #image, test = capture(data["light"], data["color"], data["exposure"])
+    image, test = CaptureExt(data["exposure"])
     print("received img")
     # Grab Lut Exported From Zemax 
     zemaxLut = lut.finalLut
@@ -283,7 +311,11 @@ def measure(light, color, lens):
                 cv2.putText(image, "TEST IMAGE", (150,440), cv2.FONT_HERSHEY_SIMPLEX, 5, (0,0,0), 6)
         flux = cY = horiz_length = vert_length = 0 
         
-
+        time.sleep(1.5)
+        result = arduino.read_all()
+        result = result.decode()
         passFail = [flux, cY, horiz_length, vert_length]
-    return image, horiz, vert, passFail
+        time.sleep(0.5)
+        arduino.reset_input_buffer()
+    return image, horiz, vert, result #passFail
 #End measure()
