@@ -65,26 +65,28 @@ def capture(light, lightColor, exp): #Captures Image, Performs Background Subtra
 #End Capture()
 
 def CaptureExt(exp):
-    print("in CaptureExt()")
-    #try:
-    msg = 'C' + str(exp)
-    print(msg)
-    msgbyte = bytes(msg, 'utf-8')
-    print(msgbyte)
-    arduino.write(msgbyte)
-    print("written to arduino")
-    image = cv2.imread("test_1.PNG")
-    print("cam triggered test image loaded")
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    test = True
-    #except:
-     #   print('in except')
-      #  image = cv2.imread("test_1.PNG")
-       # print('image loaded')
-       # image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-       # print('image converted to mono')
-       # test = True
 
+    print("in CaptureExt()")
+    #msg = 'C' + str(exp)
+    #print(msg)
+    #msgbyte = bytes(msg, 'utf-8')
+    #print(msgbyte)
+    #arduino.write(msgbyte)
+    print("written to arduino")
+    with Vimba.get_instance() as vimba:
+        cams = vimba.get_all_cameras()
+        with cams[0] as cam:
+            print('cam[0] found')
+            msg = 'C100'
+            msgbyte = bytes(msg, 'utf-8')
+            arduino.write(msgbyte)
+            try:
+                frame = cam.get_frame()
+                frame.convert_pixel_format(PixelFormat.Bgr8)
+                image = frame.as_opencv_image()
+            except:
+                print("timeout")
+    test = False
     return image, test
 #End CaptureExt() 
 
@@ -298,6 +300,8 @@ def measure(light, color, lens):
             else:
                 # Y Failed
                 cv2.putText(image, "FAIL", (650,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+        result = arduino.read_all()
+        result = result.decode()           
     else:
         print("blob not found")
         if test == True:

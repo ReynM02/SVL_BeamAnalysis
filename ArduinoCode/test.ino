@@ -1,13 +1,23 @@
+#include <DFRobot_GP8403.h>
+DFRobot_GP8403 dac(&Wire,0x5F);
 int NPNPin = 7; // Pin used to trigger NPN
-int camPin = 4; 
+int camPin = 4; // Pin used to trigger Camera
 int expTime = 1; // Exposure time of camera; On time of light
+int analog = 1; // To set analog value
+int PNP = 0; // To set PNP trigger level
 
 void setup() {
     pinMode(NPNPin, OUTPUT);
     pinMode(camPin, OUTPUT);
     digitalWrite(camPin, HIGH);
+    while(dac.begin()!=0){
+        delay(1000);
+    }
+    dac.setDACOutRange(dac.eOutputRange10V);
+    //dac.outputSquare(0, 100, 0, 100, 2);
     Serial.begin(9600); // Set Baud Rate for Serial Communication
     Serial.println("Serial Started: Waiting for input");
+
 }//end setup()
 
 /**FUNCTION PROTOTYPES**/
@@ -25,6 +35,7 @@ String outString = "";
 char mode = 0;
 
 void loop() {
+  //dac.outputSquare(5000, 1, 5000, 100, 2);
   if (Serial.available() > 0){
     input = Serial.readString();
     //Serial.println(input);
@@ -33,7 +44,7 @@ void loop() {
     input.remove(0,1);
     //Serial.println(input);
     expTime = input.toInt();
-    //Serial.println(expTime);
+    Serial.println(expTime);
     if(mode != '\n'){
         switch (mode)
         {
@@ -61,6 +72,9 @@ void loop() {
 
         Serial.println(outString); // Send Data to PC
     }//end if
+    Serial.flush();
+    Serial.end();
+    Serial.begin(9600);
   }//end if
 }//end loop()
 
@@ -74,12 +88,37 @@ void triggerCam(){
 }
 // - Measurement Protocols
 int contMode(){
+    dac.setDACOutVoltage(5000, analog); // 10v analog
+    delay(100);
+    digitalWrite(NPNPin, HIGH); // light on
+    Serial.println("NPN ON");
+    delay(100);
+    // read current at 10v on analog
+    //triggerCam(); // obtain image of light on
+    digitalWrite(NPNPin, LOW); // turn off light
+    Serial.println("NPN OFF");
+    delay(100);
+    dac.setDACOutVoltage(5000, PNP); // light on PNP
+    Serial.println("PNP ON");
+    delay(100); // read current on PNP trigger
+    dac.setDACOutVoltage(0, PNP); // light off PNP
+    Serial.println("PNP OFF");
+    delay(100);
+    dac.setDACOutVoltage(2500, analog); // 5v analog
     digitalWrite(NPNPin, HIGH);
-    //delay(10);
-    triggerCam();
-    //delay(1);
+    Serial.println("NPN ON");
+    delay(100);
     digitalWrite(NPNPin, LOW);
-    return 10;
+    Serial.println("NPN OFF");
+    delay(100);
+    dac.setDACOutVoltage(5000, PNP); // light on PNP
+    Serial.println("PNP ON");
+    delay(100); // read current on PNP trigger
+    dac.setDACOutVoltage(0, PNP); // light off PNP
+    Serial.println("PNP OFF");
+    //delay(100);
+    dac.setDACOutVoltage(500, analog); // 1v analog
+    return expTime;
 }//end contMode()
 
 int overDrive(){

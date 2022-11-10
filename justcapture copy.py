@@ -13,7 +13,7 @@ with Vimba.get_instance() as vimba:
     with cams[0] as cam:
         print('cam[0] found')
         while True:
-            msg = 'C100'
+            msg = 'C10'
             #print(msg)
             msgbyte = bytes(msg, 'utf-8')
             print(msgbyte)
