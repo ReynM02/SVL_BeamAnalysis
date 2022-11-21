@@ -11,6 +11,7 @@ int NPNPin = 13; // Pin used to trigger NPN
 int camPin = 4; // Pin used to trigger Camera
 int analog = 1; // To set analog value
 int PNP = 0; // To set PNP trigger level
+int dPNP = 12; // PNP strobe for trigger
 int onDelay = 200; // Time light is on before taking current measurment (ms)
 byte digit[4]={0,0,0,0}; // Digits recieved from peek current meter
 String peakCurrent = ""; // Assembled string of peek current
@@ -24,8 +25,8 @@ int expTime = 1; // Exposure time of camera; On time of light
 // - Measurement Protocols
 String contMode();     // Continuous Mode
 String overDrive();    // OverDrive Mode
-int multiDrive();   // MultiDrive Mode
-int dubOverDrive(); // Double OverDrive Mode
+String multiDrive();   // MultiDrive Mode
+String dubOverDrive(); // Double OverDrive Mode
 // - Basic Functions
 void triggerCam();
 /***********************/
@@ -36,6 +37,7 @@ void setup() {
     Wire.end();
     pinMode(NPNPin, OUTPUT);
     pinMode(camPin, OUTPUT);
+    pinMode(dPNP, OUTPUT);
     digitalWrite(camPin, HIGH);
     while(dac.begin()!=0){
         delay(1000);
@@ -117,8 +119,8 @@ void trigNPN(){
 #endif
 }
 
-void trigPNP(){
-    dac.setDACOutVoltage(5000, PNP); // light on PNP
+void trigPNP(int level){
+    dac.setDACOutVoltage(level, PNP); // light on PNP
 #ifdef DEBUG
     Serial.println("PNP ON");
 #endif
@@ -130,29 +132,46 @@ void trigPNP(){
 #endif
 }
 
+void NPNStrobe(){
+    Wire.begin(0x70);
+    for(int x = 0; x < 200; x++){
+            digitalWrite(NPNPin, HIGH);
+            delay(2);
+            digitalWrite(NPNPin, LOW);
+            delay(3);
+        }
+    Wire.end();
+}
+
+void PNPStrobe(int level){
+    dac.setDACOutVoltage(level, PNP); // light on PNP
+    delay(100);
+    Wire.begin(0x70);
+    for(int x = 0; x < 200; x++){
+            digitalWrite(dPNP, HIGH);
+            delay(2);
+            digitalWrite(dPNP, LOW);
+            delay(3);
+        }
+    Wire.end();
+}
+
 // - Measurement Protocols
 String contMode(){
     String currentStr = "";
     dac.setDACOutVoltage(5000, analog); // 10v analog
     delay(200);
-    trigNPN();
+    trigNPN(); // NPN Trigger
     delay(100);
     currentStr += peakCurrent;
     currentStr += ",";
-    delay(100);
-    trigPNP();
+    trigPNP(5000); // PNP Trigger (10V)
     delay(100);
     currentStr += peakCurrent;
     currentStr += ",";
-    delay(100);
     dac.setDACOutVoltage(2500, analog); // 5v analog
     delay(100);
-    trigNPN();
-    delay(100);
-    currentStr += peakCurrent;
-    currentStr += ",";
-    delay(100);
-    trigPNP();
+    trigPNP(3000); // PNP Trigger (5v)
     delay(100);
     currentStr += peakCurrent;
     dac.setDACOutVoltage(500, analog); // 1v analog
@@ -161,62 +180,72 @@ String contMode(){
 
 String overDrive(){
     String currentStr = "";
-    dac.setDACOutVoltage(5000, analog);
-    delay(100);
-    trigNPN();
+    dac.setDACOutVoltage(5000, analog); // 10v analog
+    delay(200);
+    NPNStrobe(); // NPN Strobe
+    delay(500);
     currentStr += peakCurrent;
     currentStr += ",";
-    dac.setDACOutVoltage(4000, analog);
-    delay(100);
-    trigNPN();
+    PNPStrobe(5000); // PNP Strobe 10v
+    delay(500);
     currentStr += peakCurrent;
     currentStr += ",";
-    dac.setDACOutVoltage(3000, analog);
-    delay(100);
-    trigNPN();
+    dac.setDACOutVoltage(2500, analog); // 5v analog
+    delay(500);
+    PNPStrobe(3000); // PNP Strobe 5v
+    delay(500);
     currentStr += peakCurrent;
-    currentStr += ",";
-    dac.setDACOutVoltage(2000, analog);
-    delay(100);
-    trigNPN();
-    currentStr += peakCurrent;
-    currentStr += ",";
-    dac.setDACOutVoltage(1000, analog);
-    delay(100);
-    trigNPN();
-    currentStr += peakCurrent;
-    currentStr += ",";
-    dac.setDACOutVoltage(0, analog);
-    delay(1000);
-#ifdef DEBUG
-    Serial.println("OD ON");
-#endif
-    delay(1000);
-    //trigNPN();
-    Wire.begin(0x70);
-    for(int x = 0; x < 200; x++){
-            digitalWrite(NPNPin, HIGH);
-            delay(2);
-            digitalWrite(NPNPin, LOW);
-            delay(3);
-            //readCurrent();
-        }
-    Wire.end();
-    //readCurrent();
-#ifdef DEBUG
-    Serial.println("OD OFF");
-#endif   
-    currentStr += peakCurrent;
-    dac.setDACOutVoltage(0, PNP);
+    dac.setDACOutVoltage(500, analog); // 1v analog
     return currentStr;
 }//end overDrive
 
-int multiDrive(){
-    return 12;
+String multiDrive(){
+    String currentStr = "";
+    dac.setDACOutVoltage(5000, analog); // 10v analog
+    delay(100);
+    trigNPN(); // NPN Trigger
+    currentStr += peakCurrent;
+    currentStr += ",";
+    delay(100);
+    trigPNP(5000); // PNP Trigger 10v
+    currentStr += peakCurrent;
+    currentStr += ",";
+    dac.setDACOutVoltage(2500, analog); // 5v analog
+    delay(100);
+    trigPNP(3000); // PNP Trigger 5v
+    currentStr += peakCurrent;
+    currentStr += ",";
+    dac.setDACOutVoltage(0, analog); // 0v analog
+    delay(500);
+#ifdef DEBUG
+    Serial.println("OD ON");
+#endif
+    NPNStrobe();
+    delay(100);
+    currentStr += peakCurrent;
+    currentStr += ",";
+    PNPStrobe(5000);
+    currentStr += peakCurrent;  
+#ifdef DEBUG
+    Serial.println("OD OFF");
+#endif
+    dac.setDACOutVoltage(500, analog); // 1v analog
+    return currentStr;
 }//end multiDrive()
 
-int dubOverDrive(){
-    return 13;
+String dubOverDrive(){
+    String currentStr = "";
+    dac.setDACOutVoltage(0, analog);
+    PNPStrobe(5000);
+    currentStr += peakCurrent;
+    currentStr += ",";
+    delay(100);
+    NPNStrobe();
+    currentStr += peakCurrent;
+    currentStr += ",";
+    PNPStrobe(3000);
+    currentStr += peakCurrent;
+    return currentStr;
 }//end dubOverDrive()
 
 // - I2C Interrupt Handler
@@ -237,7 +266,7 @@ void handler(int howMany){
     digit[1] -= 0x80; // Remove colon on addition
 #ifdef DEBUG
     for(int y = 0; y<4; y++){
-        //Serial.println(digit[y],HEX);
+        Serial.println(digit[y],HEX);
     }
 #endif
     peakCurrent = "";
