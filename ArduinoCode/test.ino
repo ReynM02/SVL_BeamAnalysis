@@ -7,11 +7,12 @@ SoftwareI2C WireS1;         // USES THESE PINS; SDA: , SCL: 37
 DFRobot_GP8403 dac(&WireS1,0x5F);
 
 /****GLOBAL VARIABLES****/
-int NPNPin = 13; // Pin used to trigger NPN
-int camPin = 4; // Pin used to trigger Camera
+int PNPPin = 4; // PNP strobe for trigger
+int NPNPin = 5; // Pin used to trigger NPN
+int camPin = 6; // Pin used to trigger Camera
 int analog = 1; // To set analog value
 int PNP = 0; // To set PNP trigger level
-int dPNP = 12; // PNP strobe for trigger
+int dPNP = 4; // PNP strobe for trigger
 int onDelay = 200; // Time light is on before taking current measurment (ms)
 byte digit[4]={0,0,0,0}; // Digits recieved from peek current meter
 String peakCurrent = ""; // Assembled string of peek current

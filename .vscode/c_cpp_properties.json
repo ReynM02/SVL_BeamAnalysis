@@ -16,7 +16,7 @@
             "intelliSenseMode": "gcc-x64",
             "includePath": [
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\cores\\arduino",
-                "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\variants\\standard",
+                "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\variants\\eightanaloginputs",
                 "C:\\Users\\matt.reynolds\\OneDrive - Smart Vision Lights\\Documents\\Arduino\\libraries\\DFRobot_GP8403",
                 "C:\\Users\\matt.reynolds\\OneDrive - Smart Vision Lights\\Documents\\Arduino\\libraries\\Arduino_Software_I2C-master",
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\libraries\\Wire\\src",
@@ -32,7 +32,7 @@
             "defines": [
                 "F_CPU=16000000L",
                 "ARDUINO=10815",
-                "ARDUINO_AVR_UNO",
+                "ARDUINO_AVR_NANO",
                 "ARDUINO_ARCH_AVR",
                 "__DBL_MIN_EXP__=(-125)",
                 "__HQ_FBIT__=15",

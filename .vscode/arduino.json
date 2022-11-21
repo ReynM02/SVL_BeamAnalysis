@@ -1,6 +1,7 @@
 {
-    "board": "arduino:avr:uno",
+    "board": "arduino:avr:nano",
     "programmer": "arduino:arduinoisp",
     "port": "COM9",
-    "sketch": "ArduinoCode\\test.ino"
+    "sketch": "ArduinoCode\\test.ino",
+    "configuration": "cpu=atmega328"
 }
