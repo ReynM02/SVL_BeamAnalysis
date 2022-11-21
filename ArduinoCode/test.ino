@@ -52,11 +52,8 @@ void setup() {
 void loop() {
     if (Serial.available() > 0){
         input = Serial.readString();
-        //Serial.println(input);
         mode = input.charAt(0);
-        //Serial.println(mode);
         input.remove(0,1);
-        //Serial.println(input);
         expTime = input.toInt();
         Serial.println(expTime);
         if(mode != '\n'){
@@ -68,6 +65,7 @@ void loop() {
                 break;
             case 'O': // OverDrive Mode
                 Serial.println("OverDrive");
+                outString = overDrive();
                 outString = overDrive();            // Calls OverDrive Measurment Protocol, Returns all Peak Current Measurments
                 break;
             case 'M': // MultiDrive Mode
@@ -182,7 +180,7 @@ String contMode(){
 String overDrive(){
     String currentStr = "";
     dac.setDACOutVoltage(5000, analog); // 10v analog
-    delay(200);
+    delay(500);
     NPNStrobe(); // NPN Strobe
     delay(500);
     currentStr += peakCurrent;
