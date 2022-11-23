@@ -16,6 +16,8 @@ user_list = psutil.users()
 user = user_list[0].name
 print(user)
 savePath = 'C:/Users/' + user + '/Documents/SmartLightAnalyzer'
+SLA.connect() # Connect to the electronics measurment tool
+
 # Pack the Graphs from MatPlotLib to TKinter
 def pack_figure(graph, figure):
     canvas = FigureCanvasTkAgg(figure, graph.Widget)

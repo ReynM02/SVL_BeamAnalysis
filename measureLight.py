@@ -7,12 +7,37 @@ import lut
 import json
 import serial
 import time
+import find_ports as fp
 
-arduino = serial.Serial('COM8', 9600)
-time.sleep(1)
-ready = arduino.read_all()
-print(ready)
+arduino = serial.Serial()
+arduino.baudrate = 19200
 
+def connect():
+    readyString = ""
+    ports, pnum = fp.run()
+    x=0
+    print(ports, pnum)
+    while x < pnum:
+        print(x)
+        arduino.port = ports[x]
+        print(ports[x])
+        arduino.open()
+        time.sleep(2)
+        if arduino.is_open:
+            ready = arduino.read_all()
+            try:
+                readyString = ready.decode("UTF-8")
+            except:
+                readyString = "not matching baudrate"
+            print(readyString)
+        if readyString == 'SLA':
+            print("found it")
+            return 1
+        else:
+            arduino.close()
+            x += 1
+
+        
 def capture(light, lightColor, exp): #Captures Image, Performs Background Subtraction, Determines Test Mode
     try:
         with Vimba.get_instance() as vimba:
@@ -301,7 +326,7 @@ def measure(light, color, lens):
                 # Y Failed
                 cv2.putText(image, "FAIL", (650,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
         result = arduino.read_all()
-        result = result.decode()           
+        result = result.decode("UTF-8")           
     else:
         print("blob not found")
         if test == True:
@@ -316,10 +341,12 @@ def measure(light, color, lens):
         flux = cY = horiz_length = vert_length = 0 
         
         time.sleep(1.5)
-        result = arduino.read_all()
-        result = result.decode()
-        passFail = [flux, cY, horiz_length, vert_length]
+        result = arduino.read_until(b'}')
+        result = result.decode("UTF-8")
+        current = result[:-1]
+        print(current)
+        passFail = [flux, cY, horiz_length, vert_length, current]
         time.sleep(0.5)
         arduino.reset_input_buffer()
-    return image, horiz, vert, result #passFail
+    return image, horiz, vert, passFail
 #End measure()

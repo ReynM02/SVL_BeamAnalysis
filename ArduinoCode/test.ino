@@ -20,6 +20,7 @@ String input = ""; // Input string from PC (i.e. "C100" where c=mode & 100=expTi
 String outString = ""; // String sent back to PC
 char mode = 0; // Mode of light, Selects measurment protocol
 int expTime = 1; // Exposure time of camera; On time of light
+String EOL = "}";
 /************************/
 
 /***FUNCTION PROTOTYPES***/
@@ -45,8 +46,8 @@ void setup() {
         Serial.print("not init");
     }
     dac.setDACOutRange(dac.eOutputRange10V);
-    Serial.begin(9600); // Set Baud Rate for Serial Communication
-    Serial.println("Serial Started: Waiting for input");
+    Serial.begin(19200); // Set Baud Rate for Serial Communication
+    Serial.print("SLA");
 }//end setup()
 
 void loop() {
@@ -55,12 +56,12 @@ void loop() {
         mode = input.charAt(0);
         input.remove(0,1);
         expTime = input.toInt();
-        Serial.println(expTime);
+        //Serial.println(expTime);
         if(mode != '\n'){
             switch (mode)
             {
             case 'C': // Continuous Mode
-                Serial.println("Continuous");
+                //Serial.println("Continuous");
                 outString = contMode();             // Calls Continuous Measurment Protocol, Returns all Peak Current Measurments
                 break;
             case 'O': // OverDrive Mode
@@ -81,12 +82,12 @@ void loop() {
                 outString = "Invalid Entry: 0";
                 break;
             }//end switch
-
-            Serial.println(outString); // Send Data to PC
+            outString += EOL;
+            Serial.print(outString); // Send Data to PC
         }//end if
         Serial.flush();
         Serial.end();
-        Serial.begin(9600);
+        Serial.begin(19200);
     }//end if
 }//end loop()
 
