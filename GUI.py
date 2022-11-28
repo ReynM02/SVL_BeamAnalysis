@@ -162,18 +162,23 @@ while True:
         #print(splitString)
         try:
             light = splitString[0]
-            color = splitString[1]
+            mode = splitString[1]
+            color = splitString[2]
         except IndexError:
             sg.popup('Error: Invalid Configuration, Enter Light P/N and S/N.', title="Error: InvalConfgErr", modal=True)
         try:
-            lens = splitString[2]
+            lens = splitString[3]
         except IndexError:
-            lens = 'S'
+            lens = ''
+        try:
+            pol = splitString[3]
+        except IndexError:
+            pol = ''
 
-        print(light, color, lens)
+        print(light_string)
 
         try:
-            frame, horiz, vert, passFail = SLA.measure(light, color, lens)
+            frame, horiz, vert, passFail = SLA.measure(light_string)
             invalConfig = False
         except:
             invalConfig = True
@@ -199,11 +204,11 @@ while True:
 
         imgbytes = cv2.imencode(".png", frame)[1].tobytes()
         window["-IMAGE-"].update(data=imgbytes)
-        csvPath = savePath + '/Data/' + str(day) + '-' + str(month) + '-' + str(year) + '_Light_Measurements.csv'
+        csvPath = savePath + '/Data/' + str(month) + '-' + str(day) + '-' + str(year) + '_Light_Measurements.csv'
         rowData = [light_string, serial_num]
         rowData.extend(passFail)
         append_list_as_row(csvPath, rowData)
-        sg.popup(str(passFail), title='Measurment Data', modal=False)
+        sg.popup(str(rowData), title='Measurment Data', modal=False)
 
     elif event == "-LIGHT-":
         if values["-LIGHT-"] == 'JWL':

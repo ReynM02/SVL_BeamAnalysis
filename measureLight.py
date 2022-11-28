@@ -9,6 +9,11 @@ import serial
 import time
 import find_ports as fp
 
+# Final image scale factors
+manta = 0.95   # 1
+alvium = 0.75  # 2
+
+
 arduino = serial.Serial()
 arduino.baudrate = 19200
 
@@ -16,11 +21,11 @@ def connect():
     readyString = ""
     ports, pnum = fp.run()
     x=0
-    print(ports, pnum)
+    #print(ports, pnum)
     while x < pnum:
         print(x)
         arduino.port = ports[x]
-        print(ports[x])
+        #print(ports[x])
         arduino.open()
         time.sleep(2)
         if arduino.is_open:
@@ -29,9 +34,9 @@ def connect():
                 readyString = ready.decode("UTF-8")
             except:
                 readyString = "not matching baudrate"
-            print(readyString)
+            #print(readyString)
         if readyString == 'SLA':
-            print("found it")
+            #print("found it")
             return 1
         else:
             arduino.close()
@@ -89,20 +94,13 @@ def capture(light, lightColor, exp): #Captures Image, Performs Background Subtra
     return image, test
 #End Capture()
 
-def CaptureExt(exp):
-
+def CaptureExt(mode, exp):
     print("in CaptureExt()")
-    #msg = 'C' + str(exp)
-    #print(msg)
-    #msgbyte = bytes(msg, 'utf-8')
-    #print(msgbyte)
-    #arduino.write(msgbyte)
-    print("written to arduino")
     with Vimba.get_instance() as vimba:
         cams = vimba.get_all_cameras()
         with cams[0] as cam:
             print('cam[0] found')
-            msg = 'C100'
+            msg = str(mode) + str(exp)
             msgbyte = bytes(msg, 'utf-8')
             arduino.write(msgbyte)
             try:
@@ -115,28 +113,30 @@ def CaptureExt(exp):
     return image, test
 #End CaptureExt() 
 
-def loadConfig(light, color, lens):
-    filePath = "configs/"+light+"-"+color+"-"+lens+".json"
+def loadConfig(light_string):
+    filePath = "configs/"+light_string+".json"
     try:
         with open(filePath, 'r') as file:
             print("found config")
             data = json.load(file)
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         return 1
 
     return data
 #End loadConfig()
 
-def measure(light, color, lens):
+def measure(light_string):
     # Load Config for Light
-    data = loadConfig(light, color, lens)
+    data = loadConfig(light_string)
+    # Get Light Mode from Config
+    mode = data['mode']
     
     if data == 1:
         return None
 
     # Obtain Image
     #image, test = capture(data["light"], data["color"], data["exposure"])
-    image, test = CaptureExt(data["exposure"])
+    image, test = CaptureExt(mode, data["exposure"])
     print("received img")
     # Grab Lut Exported From Zemax 
     zemaxLut = lut.finalLut
@@ -344,9 +344,15 @@ def measure(light, color, lens):
         result = arduino.read_until(b'}')
         result = result.decode("UTF-8")
         current = result[:-1]
-        print(current)
-        passFail = [flux, cY, horiz_length, vert_length, current]
+        currentlist = current.split(",")        
+        print(currentlist)
+        passFail = [flux, cY, horiz_length, vert_length]
+        passFail.extend(currentlist)
         time.sleep(0.5)
         arduino.reset_input_buffer()
-    return image, horiz, vert, passFail
+    p = alvium
+    w = int(image.shape[1] * p)
+    h = int(image.shape[0] * p)
+    res_img = cv2.resize(image, (w,h))
+    return res_img, horiz, vert, passFail
 #End measure()

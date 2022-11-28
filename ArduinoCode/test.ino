@@ -65,12 +65,10 @@ void loop() {
                 outString = contMode();             // Calls Continuous Measurment Protocol, Returns all Peak Current Measurments
                 break;
             case 'O': // OverDrive Mode
-                Serial.println("OverDrive");
                 outString = overDrive();
                 outString = overDrive();            // Calls OverDrive Measurment Protocol, Returns all Peak Current Measurments
                 break;
-            case 'M': // MultiDrive Mode
-                Serial.println("MultiDrive");
+            case 'M': // MultiDrive Mode;
                 outString = multiDrive();           // Calls MultiDrive Measurment Protocol, Returns all Peak Current Measurments
                 break;
             case 'D': // Double OverDrive Mode
