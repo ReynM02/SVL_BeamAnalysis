@@ -9,7 +9,7 @@ DFRobot_GP8403 dac(&WireS1,0x5F);
 /****GLOBAL VARIABLES****/
 int PNPPin = 4; // PNP strobe for trigger
 int NPNPin = 5; // Pin used to trigger NPN
-int camPin = 6; // Pin used to trigger Camera
+int camPin = 7; // Pin used to trigger Camera
 int analog = 1; // To set analog value
 int PNP = 0; // To set PNP trigger level
 int dPNP = 4; // PNP strobe for trigger
@@ -248,7 +248,7 @@ String dubOverDrive(){
 
 // - I2C Interrupt Handler
 void handler(int howMany){
-   // Serial.print("Data Received: ");
+   Serial.print("Data Received: ");
     int x = 0;
     while(Wire.available()) {
         byte c = Wire.read();    // Receive a byte as character
