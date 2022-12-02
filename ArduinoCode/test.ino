@@ -2,7 +2,7 @@
 
 #include <DFRobot_GP8403.h> // I2C DAC
 #include <SoftwareI2C.h>    // Software I2C Bus
-SoftwareI2C WireS1;         // USES THESE PINS; SDA: , SCL: 37
+SoftwareI2C WireS1;         // USES THESE PINS; SDA: 2, SCL: 3 
 #include <Wire.h>           // Hardware I2C Bus
 DFRobot_GP8403 dac(&WireS1,0x5F);
 
