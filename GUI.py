@@ -103,7 +103,7 @@ image_column = [
     [sg.Text("Light P/N:"), sg.InputText(enable_events=True, size=(20, 5), key="-LIGHT_STRING-", do_not_clear=True)],
     [sg.Text("Light S/N:"), sg.InputText(enable_events=True, size=(20, 5), key="-SERIAL_NUM-", do_not_clear=True)],
     #[sg.Column(lists)],
-    [sg.Button("Measure", size=(10,1), key="-MEASURE-")]
+    [sg.Button("Measure", size=(10,2), key="-MEASURE-")]
 ]
 
 graph_column = [
@@ -119,6 +119,7 @@ layout = [
     sg.VSeperator(),
     sg.Column(graph_column, visible=False, key="-GRAPHS-", expand_x=True, expand_y=True)]
 ]
+
 
 # Create the window and show it
 window = sg.Window('Smart Vision Lights Beam Analysis', layout, finalize=True, resizable=True)
@@ -161,22 +162,13 @@ while True:
         serialNum = values["-SERIAL_NUM-"]
         splitString = light_string.split('-')
         #print(splitString)
-        mode = splitString[1]
-        if mode != "MD" | "DO":
-            try:
-                light = splitString[0]
-                mode = splitString[1]
-                color = splitString[2]
-            except IndexError:
-                sg.popup('Error: Invalid Configuration, Enter Light P/N and S/N.', title="Error: InvalConfgErr", modal=True)
-                print("lightgistics")
-        else:
-            try:
-                light = splitString[0]
-                color = splitString[1]
-            except IndexError:
-                sg.popup('Error: Invalid Configuration, Enter Light P/N and S/N.', title="Error: InvalConfgErr", modal=True)
-                print("nonlightgistics")
+        try:
+            light = splitString[0]
+            mode = splitString[1]
+            color = splitString[2]
+        except IndexError:
+            sg.popup('Error: Invalid Configuration, Enter Light P/N and S/N.', title="Error: InvalConfgErr", modal=True)
+            print("lightgistics")
         try:
             lens = splitString[3]
         except IndexError:
@@ -189,9 +181,10 @@ while True:
         print(light_string)
 
         try:
-            frame, horiz, vert, passFail = SLA.measure(light_string)
+            frame, horiz, vert, results, passFail = SLA.measure(light_string)
             invalConfig = False
         except:
+            passFail = False
             invalConfig = True
 
         if invalConfig == True:
@@ -218,12 +211,27 @@ while True:
         csvPath = savePath + '/Data/' + str(month) + '-' + str(day) + '-' + str(year) + '_Light_Measurements.csv'
         rowData = [light_string, serial_num]
         try:
-            rowData.extend(passFail)
+            rowData.extend(results)
         except NameError:
-            passFail = [0,0,0,0]
-            rowData.extend(passFail)
+            results = [0,0,0,0]
+            rowData.extend(results)
         append_list_as_row(csvPath, rowData)
-        sg.popup(str(rowData), title='Measurment Data', modal=False)
+        if passFail:
+            output = [
+                [sg.Text("", text_color="green", font=["",20,"bold"], justification="center", size=(10, 1))],               
+                [sg.Text("PASS", text_color="green", font=["",50,"bold"], justification="center", size=(10, 1))],
+                [sg.Text(str(rowData))],
+                [sg.OK(size=(10,1), font=["",50,""],p=((15,0),(0,0)))]
+            ]
+        else:
+            output = [
+                [sg.Text("", text_color="green", font=["",20,"bold"], justification="center", size=(10, 1))],               
+                [sg.Text("FAIL", text_color="red", font=["",50,"bold"], justification="center", size=(10, 1))],
+                [sg.Text(str(rowData))],
+                [sg.OK(size=(10,1), font=["",50,""],p=((15,0),(0,0)))]
+            ]
+
+        choice, _ = sg.Window('Measurment Data', output, modal=False).read(close=True)
         window['-MEASURE-'].update(disabled=False)
     elif event == "-LIGHT-":
         if values["-LIGHT-"] == 'JWL':

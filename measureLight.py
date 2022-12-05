@@ -293,10 +293,12 @@ def measure(light_string):
                 #for now just use text
             cv2.putText(image, "SMART VISION LIGHTS", (25,700), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2)
             # - Pass/Fail data
+            pf = [False, False, False, False]
             # -- Intensity
             if flux > intensityLow and flux < intensityHigh:
                 # Flux Passed
                 cv2.putText(image, "PASS", (650,35), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2) 
+                pf[0] = True
             else:
                 # Flux Failed
                 cv2.putText(image, "FAIL", (650,35), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2) 
@@ -305,6 +307,7 @@ def measure(light_string):
             if cY > symmetryLow and cY < symmetryHigh:
                 # Symmetry Passed
                 cv2.putText(image, "PASS", (650,70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2) 
+                pf[1] = True
             else:
                 # Symmetry Failed
                 cv2.putText(image, "FAIL", (650,70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2) 
@@ -312,7 +315,8 @@ def measure(light_string):
             # -- X Value
             if horiz_length > xLow and horiz_length < xHigh:
                 # X Passed
-                cv2.putText(image, "PASS", (650,105), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2) 
+                cv2.putText(image, "PASS", (650,105), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+                pf[2] = True 
             else:
                 # X Failed
                 cv2.putText(image, "FAIL", (650,105), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2) 
@@ -320,13 +324,24 @@ def measure(light_string):
             # -- Y Value
             if vert_length > yLow and vert_length < yHigh:
                 # Y Passed
-                cv2.putText(image, "PASS", (650,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2) 
+                cv2.putText(image, "PASS", (650,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+                pf[3] = True 
             else:
                 # Y Failed
                 cv2.putText(image, "FAIL", (650,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
-        result = arduino.read_all()
-        result = result.decode("UTF-8")           
+                
+        time.sleep(1.5)
+        currentData = arduino.read_until(b'}')
+        currentData = currentData.decode("UTF-8")
+        current = currentData[:-1]
+        currentlist = current.split(",")        
+        print(currentlist)
+        results = [flux, cY, horiz_length, vert_length]
+        results.extend(currentlist)
+        time.sleep(0.5)
+        arduino.reset_input_buffer()          
     else:
+        pf = [False, False, False, False]
         print("blob not found")
         if test == True:
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
@@ -340,18 +355,26 @@ def measure(light_string):
         flux = cY = horiz_length = vert_length = 0 
         
         time.sleep(1.5)
-        result = arduino.read_until(b'}')
-        result = result.decode("UTF-8")
-        current = result[:-1]
+        currentData = arduino.read_until(b'}')
+        currentData = currentData.decode("UTF-8")
+        current = currentData[:-1]
         currentlist = current.split(",")        
         print(currentlist)
-        passFail = [flux, cY, horiz_length, vert_length]
-        passFail.extend(currentlist)
+        results = [flux, cY, horiz_length, vert_length]
+        results.extend(currentlist)
         time.sleep(0.5)
         arduino.reset_input_buffer()
     p = alvium
     w = int(image.shape[1] * p)
     h = int(image.shape[0] * p)
     res_img = cv2.resize(image, (w,h))
-    return res_img, horiz, vert, passFail
+    passCount = 0
+    for n in enumerate(pf):
+        if pf[n] == True:
+            passCount += 1
+    if passCount == 4:
+        passFail = True
+    else:
+        passFail = False
+    return res_img, horiz, vert, results, passFail 
 #End measure()
