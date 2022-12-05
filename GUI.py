@@ -154,18 +154,29 @@ while True:
             window['-GRAPHS-'].update(visible=False)
             hidden = True
     elif event == "-MEASURE-":
+        window['-MEASURE-'].update(disabled=True)
         sysTime = datetime.datetime.now()
         dateString = sysTime.strftime("%Y-%m-%d") + '_' + sysTime.strftime("%H%M%S")
         light_string = values["-LIGHT_STRING-"]
         serialNum = values["-SERIAL_NUM-"]
         splitString = light_string.split('-')
         #print(splitString)
-        try:
-            light = splitString[0]
-            mode = splitString[1]
-            color = splitString[2]
-        except IndexError:
-            sg.popup('Error: Invalid Configuration, Enter Light P/N and S/N.', title="Error: InvalConfgErr", modal=True)
+        mode = splitString[1]
+        if mode != "MD" | "DO":
+            try:
+                light = splitString[0]
+                mode = splitString[1]
+                color = splitString[2]
+            except IndexError:
+                sg.popup('Error: Invalid Configuration, Enter Light P/N and S/N.', title="Error: InvalConfgErr", modal=True)
+                print("lightgistics")
+        else:
+            try:
+                light = splitString[0]
+                color = splitString[1]
+            except IndexError:
+                sg.popup('Error: Invalid Configuration, Enter Light P/N and S/N.', title="Error: InvalConfgErr", modal=True)
+                print("nonlightgistics")
         try:
             lens = splitString[3]
         except IndexError:
@@ -206,10 +217,14 @@ while True:
         window["-IMAGE-"].update(data=imgbytes)
         csvPath = savePath + '/Data/' + str(month) + '-' + str(day) + '-' + str(year) + '_Light_Measurements.csv'
         rowData = [light_string, serial_num]
-        rowData.extend(passFail)
+        try:
+            rowData.extend(passFail)
+        except NameError:
+            passFail = [0,0,0,0]
+            rowData.extend(passFail)
         append_list_as_row(csvPath, rowData)
         sg.popup(str(rowData), title='Measurment Data', modal=False)
-
+        window['-MEASURE-'].update(disabled=False)
     elif event == "-LIGHT-":
         if values["-LIGHT-"] == 'JWL':
             window["-SIZE-"].update(values=other_size)

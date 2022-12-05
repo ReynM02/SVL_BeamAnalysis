@@ -13,7 +13,6 @@ import find_ports as fp
 manta = 0.95   # 1
 alvium = 0.75  # 2
 
-
 arduino = serial.Serial()
 arduino.baudrate = 19200
 
