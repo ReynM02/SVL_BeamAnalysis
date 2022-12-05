@@ -325,8 +325,16 @@ def measure(light_string):
             else:
                 # Y Failed
                 cv2.putText(image, "FAIL", (650,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
-        result = arduino.read_all()
-        result = result.decode("UTF-8")           
+        time.sleep(1.5)
+        result = arduino.read_until(b'}')
+        result = result.decode("UTF-8")
+        current = result[:-1]
+        currentlist = current.split(",")        
+        print(currentlist)
+        passFail = [flux, cY, horiz_length, vert_length]
+        passFail.extend(currentlist)
+        time.sleep(0.5)
+        arduino.reset_input_buffer()       
     else:
         print("blob not found")
         if test == True:
