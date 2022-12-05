@@ -9,8 +9,8 @@
 #
 # SPDX-License-Identifier:    BSD-3-Clause
 
-"""\
-This module will provide a function called comports that returns an
+"""
+This module will provide a function called run that returns an
 iterable (generator or list) that will enumerate available com ports. Note that
 on some systems non-existent ports may be listed.
 
@@ -40,7 +40,7 @@ else:
 
 
 def grep(regexp, include_links=False):
-    """\
+    """
     Search for ports using a regular expression. Port name, description and
     hardware ID are searched. The function returns an iterable that returns the
     same tuples as comport() would do.
