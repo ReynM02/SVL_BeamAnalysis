@@ -197,7 +197,7 @@ while True:
             os.makedirs(savePath)
             os.makedirs(savePath+'/Images')
             os.makedirs(savePath+'/Data')
-        imgPath = "C:/Users/matt.reynolds/Documents/SmartLightAnalyzer/Images/"
+        imgPath = savePath+"/Images/"
         print (os.path.join(imgPath, light_string+'_'+serialNum+'_'+dateString+'.jpg'))
         isWritten = cv2.imwrite(imgPath+light_string+'_'+serialNum+'_'+dateString+'.jpg', frame)
 
