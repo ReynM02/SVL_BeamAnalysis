@@ -29,8 +29,13 @@ String contMode();     // Continuous Mode
 String overDrive();    // OverDrive Mode
 String multiDrive();   // MultiDrive Mode
 String dubOverDrive(); // Double OverDrive Mode
+bool triggerCam(char);     // Triggers Camera for optical tests
 // - Basic Functions
-void triggerCam();
+void readCurrent();    // Reads Peak Current Measurment
+void trigNPN();        // Triggers NPN
+void trigPNP(int);        // Triggers PNP
+void NPNStrobe();      // Strobes NPN (used in OverDrive and Double OverDrive)
+void PNPStrobe(int);      // Strobes PNP (used in OverDrive and Double OverDrive)
 /***********************/
 
 void setup() {
@@ -40,14 +45,13 @@ void setup() {
     pinMode(NPNPin, OUTPUT);
     pinMode(camPin, OUTPUT);
     pinMode(dPNP, OUTPUT);
-    digitalWrite(camPin, HIGH);
+    digitalWrite(camPin, LOW);
     while(dac.begin()!=0){
-        delay(1000);
-        Serial.print("not init");
+        delay(1000); 
     }
     dac.setDACOutRange(dac.eOutputRange10V);
     Serial.begin(19200); // Set Baud Rate for Serial Communication
-    Serial.print("SLA");
+    Serial.print("SLA"); // Prints ID message
 }//end setup()
 
 void loop() {
@@ -56,28 +60,28 @@ void loop() {
         mode = input.charAt(0);
         input.remove(0,1);
         expTime = input.toInt();
-        //Serial.println(expTime);
         if(mode != '\n'){
             switch (mode)
             {
             case 'C': // Continuous Mode
-                //Serial.println("Continuous");
-                outString = contMode();             // Calls Continuous Measurment Protocol, Returns all Peak Current Measurments
+                triggerCam(mode);
+                outString = contMode();        // Calls Continuous Measurment Protocol, Returns all Peak Current Measurments
                 break;
             case 'O': // OverDrive Mode
+                triggerCam(mode);
                 outString = overDrive();
-                outString = overDrive();            // Calls OverDrive Measurment Protocol, Returns all Peak Current Measurments
+                outString = overDrive();       // Calls OverDrive Measurment Protocol, Returns all Peak Current Measurments
                 break;
             case 'M': // MultiDrive Mode;
-                outString = multiDrive();           // Calls MultiDrive Measurment Protocol, Returns all Peak Current Measurments
+                triggerCam(mode);
+                outString = multiDrive();      // Calls MultiDrive Measurment Protocol, Returns all Peak Current Measurments
                 break;
             case 'D': // Double OverDrive Mode
-                Serial.println("Double OverDrive");
-                outString = dubOverDrive();         // Calls Double Overdrive Measurment Protocol, Returns all Peak Current Measurments
+                triggerCam(mode);
+                outString = dubOverDrive();    // Calls Double Overdrive Measurment Protocol, Returns all Peak Current Measurments
                 break;
             default:
-                Serial.println("Invalid Entry");
-                outString = "Invalid Entry: 0";
+                outString = "F";
                 break;
             }//end switch
             outString += EOL;
@@ -91,12 +95,6 @@ void loop() {
 
 /**USER DEFINED FUNCTIONS**/
 // - Basic Functions
-void triggerCam(){
-    digitalWrite(camPin, LOW);
-    delay(expTime);
-    digitalWrite(camPin, HIGH);
-}//end triggerCam()
-
 void readCurrent(){
     Wire.begin(0x70);
     delay(500);
@@ -110,7 +108,6 @@ void trigNPN(){
 #endif
     delay(onDelay);
     readCurrent();
-    //triggerCam(); // obtain image of light on
     digitalWrite(NPNPin, LOW); // turn off light
 #ifdef DEBUG
     Serial.println("NPN OFF");
@@ -154,6 +151,18 @@ void PNPStrobe(int level){
     Wire.end();
 }
 
+void serialHandshake(){
+    String hs = "";
+    int timeOut = 0;
+    Serial.write("S");
+    hs = Serial.readString();
+    while(hs != "K")// && timeOut <= 10000)
+    {
+        hs = Serial.readString();
+        //Serial.print(hs);
+        timeOut++;
+    }
+}
 // - Measurement Protocols
 String contMode(){
     String currentStr = "";
@@ -246,6 +255,22 @@ String dubOverDrive(){
     return currentStr;
 }//end dubOverDrive()
 
+bool triggerCam(char mode){
+    // Background Image
+    digitalWrite(camPin, HIGH);
+    delay(expTime);
+    digitalWrite(camPin, LOW);
+    serialHandshake();
+    //Foreground Image
+    dac.setDACOutVoltage(5000, analog); // 10v analog
+    digitalWrite(NPNPin, HIGH); // Light on with NPN
+    digitalWrite(camPin, HIGH);  // Camera Pulse Started
+    delay(expTime);             
+    digitalWrite(camPin, LOW); // Camera Pulse ended
+    digitalWrite(NPNPin, LOW);  // Light Off
+    serialHandshake();          // Wait for image to be grabbed
+}//end triggerCam()
+
 // - I2C Interrupt Handler
 void handler(int howMany){
    Serial.print("Data Received: ");
@@ -260,7 +285,6 @@ void handler(int howMany){
             x++;
         }    
     }
-    //delay(100);  
     digit[1] -= 0x80; // Remove colon on addition
 #ifdef DEBUG
     for(int y = 0; y<4; y++){

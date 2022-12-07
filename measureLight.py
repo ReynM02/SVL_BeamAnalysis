@@ -50,7 +50,7 @@ def capture(light, lightColor, exp): #Captures Image, Performs Background Subtra
             #print(exp)
             with cams[0] as cam:
                 print('cams[0] found')
-                cam.load_settings("colorSettings.xml", PersistType.All)
+                #cam.load_settings("colorSettings.xml", PersistType.All)
                 print('color settings loaded')
                 print('cam got')
                 #exposure_time.set(500)
@@ -102,12 +102,37 @@ def CaptureExt(mode, exp):
             msg = str(mode) + str(exp)
             msgbyte = bytes(msg, 'utf-8')
             arduino.write(msgbyte)
+            hs = arduino.read(1)
+            hs = hs.decode("UTF-8")
+            print(hs)
+            while hs != "S":
+                hs = arduino.read(1)
+                hs = hs.decode("UTF-8")
+                #print(hs)
             try:
-                frame = cam.get_frame()
-                frame.convert_pixel_format(PixelFormat.Bgr8)
-                image = frame.as_opencv_image()
+                bgframe = cam.get_frame(timeout_ms=3000)
+                print("got bgframe")
+                bgframe.convert_pixel_format(PixelFormat.Bgr8)
+                bgimage = bgframe.as_opencv_image()
+                arduino.write(bytes("K", 'utf-8'))
             except:
                 print("timeout")
+
+            hs2 = arduino.read_all()
+            hs2 = hs2.decode("UTF-8")
+            print(hs2)
+            while hs2 != "S":
+                hs2 = arduino.read(1)
+                hs2 = hs2.decode("UTF-8")
+                #print(hs)
+            try:
+                frame = cam.get_frame(timeout_ms=3000)
+                print("got frame")
+                frame.convert_pixel_format(PixelFormat.Bgr8)
+                image = frame.as_opencv_image()
+                arduino.write(bytes("K", 'utf-8'))
+            except:
+                print("timeout2")
     test = False
     return image, test
 #End CaptureExt() 
