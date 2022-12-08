@@ -53,7 +53,7 @@ hidden = True
 
 
 
-sg.theme("DarkGrey2")
+sg.theme("Black")
 
 buttons = [
     [sg.Button("Exit", size=(10, 1))],
@@ -98,12 +98,12 @@ lists = [
 ]
 
 image_column = [
-    [sg.Text("\nBeam Analysis", size=(160, 5), justification="center", font=100)],
+    [sg.Text("\nBeam Analysis", size=(50, 2), justification="center", font=["",30,"bold"], expand_x= True)],
     [sg.Image(filename="", key="-IMAGE-", size=(100, 100), expand_x=True)],
-    [sg.Text("Light P/N:"), sg.InputText(enable_events=True, size=(20, 5), key="-LIGHT_STRING-", do_not_clear=True)],
-    [sg.Text("Light S/N:"), sg.InputText(enable_events=True, size=(20, 5), key="-SERIAL_NUM-", do_not_clear=True)],
+    [sg.Text("Light P/N:", font=["",15,""]), sg.InputText(enable_events=True, size=(20, 5), font=["",15,""], key="-LIGHT_STRING-", do_not_clear=True)],
+    [sg.Text("Light S/N:", font=["",15,""]), sg.InputText(enable_events=True, size=(20, 5), font=["",15,""], key="-SERIAL_NUM-", do_not_clear=True)],
     #[sg.Column(lists)],
-    [sg.Button("Measure", size=(10,2), key="-MEASURE-")]
+    [sg.Button("Measure", size=(10,2), font=["",20,"bold"], key="-MEASURE-")]
 ]
 
 graph_column = [
