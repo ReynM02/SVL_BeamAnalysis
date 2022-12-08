@@ -112,11 +112,17 @@ def CaptureExt(mode, exp):
             try:
                 bgframe = cam.get_frame(timeout_ms=3000)
                 print("got bgframe")
-                bgframe.convert_pixel_format(PixelFormat.Bgr8)
+                #bgframe.convert_pixel_format(PixelFormat.Bgr8)
+                print("converted frame")
                 bgimage = bgframe.as_opencv_image()
+                print("saved as bgimage")
                 arduino.write(bytes("K", 'utf-8'))
-            except:
+            except ValueError:
                 print("timeout")
+                bgframe = cam.get_frame(timeout_ms=3000)
+                bgimage = bgframe.as_opencv_image()
+                #arduino.write(bytes("K", 'utf-8'))
+                arduino.write(bytes("K", 'utf-8'))
 
             hs2 = arduino.read_all()
             hs2 = hs2.decode("UTF-8")
@@ -125,14 +131,17 @@ def CaptureExt(mode, exp):
                 hs2 = arduino.read(1)
                 hs2 = hs2.decode("UTF-8")
                 #print(hs)
-            try:
-                frame = cam.get_frame(timeout_ms=3000)
-                print("got frame")
-                frame.convert_pixel_format(PixelFormat.Bgr8)
-                image = frame.as_opencv_image()
-                arduino.write(bytes("K", 'utf-8'))
-            except:
-                print("timeout2")
+            #try:
+            frame = cam.get_frame(timeout_ms=3000)
+            print("got frame")
+            #frame.convert_pixel_format(PixelFormat.Bgr8)
+            print("converted frame")
+            image = frame.as_opencv_image()
+            print("image saved as image")
+            arduino.write(bytes("K", 'utf-8'))
+            #except:
+                #print("timeout2 - continue anyway")
+                #arduino.write(bytes("K", 'utf-8'))
     test = False
     return image, test
 #End CaptureExt() 
@@ -299,24 +308,24 @@ def measure(light_string):
 
             # Setup Text Additions 
             # - Pass/Fail values
-            cv2.putText(image, "I: " + str(intensityLow) + ", " + str(intensityHigh) + ", " + str(flux), (34,35), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2) #Total Flux
-            cv2.putText(image, "S: " + str(symmetryLow) + ", " + str(symmetryHigh) + ", " + str(cY), (25,70), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2) #Beam Symmetry
-            cv2.putText(image, "x: " + str(xLow) + ", " + str(xHigh) + ", " + str(horiz_length), (25,105), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2) #X value - 80% Uniformity Size
-            cv2.putText(image, "y: " + str(yLow) + ", " + str(yHigh) + ", " + str(vert_length), (25,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2) #Y value - 80% Uniformity Size
+            #cv2.putText(image, "I: " + str(intensityLow) + ", " + str(intensityHigh) + ", " + str(flux), (34,35), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2) #Total Flux
+            #cv2.putText(image, "S: " + str(symmetryLow) + ", " + str(symmetryHigh) + ", " + str(cY), (25,70), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2) #Beam Symmetry
+            #cv2.putText(image, "x: " + str(xLow) + ", " + str(xHigh) + ", " + str(horiz_length), (25,105), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2) #X value - 80% Uniformity Size
+            #cv2.putText(image, "y: " + str(yLow) + ", " + str(yHigh) + ", " + str(vert_length), (25,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2) #Y value - 80% Uniformity Size
             # - Light P/N + Family
             PN = data["light"] + str(data["size"]) + "-" + data["color"]
-            cv2.putText(image, PN, (1142,35), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2) #Light Part Number
-            cv2.putText(image, data["light"] + " Family", (1142,60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2) #Light Family(First part of the Part Number) - redundant?
+            #cv2.putText(image, PN, (1142,35), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2) #Light Part Number
+            #cv2.putText(image, data["light"] + " Family", (1142,60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2) #Light Family(First part of the Part Number) - redundant?
             # - Date & Time
             # -- Obtain date and time
             sysTime = datetime.datetime.now()
             # -- Parse Date and Time Data 
-            cv2.putText(image, sysTime.strftime("%Y-%m-%d"), (1150,675), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2) #Date of capture - will update each time the script runs
-            cv2.putText(image, sysTime.strftime("%H:%M:%S"), (1192,700), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2) #Time of capture - will update each time the script runs
+            #cv2.putText(image, sysTime.strftime("%Y-%m-%d"), (1150,675), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2) #Date of capture - will update each time the script runs
+            #cv2.putText(image, sysTime.strftime("%H:%M:%S"), (1192,700), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2) #Time of capture - will update each time the script runs
             # - Add logo on bottom of image
                 #todo: Append the long logo to the bottom of the image, size accordingly
                 #for now just use text
-            cv2.putText(image, "SMART VISION LIGHTS", (25,700), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2)
+            #cv2.putText(image, "SMART VISION LIGHTS", (25,700), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2)
             # - Pass/Fail data
             pf = [False, False, False, False]
             # -- Intensity
@@ -324,36 +333,36 @@ def measure(light_string):
                 # Flux Passed
                 cv2.putText(image, "PASS", (650,35), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2) 
                 pf[0] = True
-            else:
+            #else:
                 # Flux Failed
-                cv2.putText(image, "FAIL", (650,35), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2) 
+                #cv2.putText(image, "FAIL", (650,35), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2) 
 
             # -- Symmetry
             if cY > symmetryLow and cY < symmetryHigh:
                 # Symmetry Passed
                 cv2.putText(image, "PASS", (650,70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2) 
                 pf[1] = True
-            else:
+            #else:
                 # Symmetry Failed
-                cv2.putText(image, "FAIL", (650,70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2) 
+                #cv2.putText(image, "FAIL", (650,70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2) 
 
             # -- X Value
             if horiz_length > xLow and horiz_length < xHigh:
                 # X Passed
-                cv2.putText(image, "PASS", (650,105), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+                #cv2.putText(image, "PASS", (650,105), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
                 pf[2] = True 
-            else:
+            #else:
                 # X Failed
-                cv2.putText(image, "FAIL", (650,105), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2) 
+                #cv2.putText(image, "FAIL", (650,105), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2) 
 
             # -- Y Value
             if vert_length > yLow and vert_length < yHigh:
                 # Y Passed
-                cv2.putText(image, "PASS", (650,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+                #cv2.putText(image, "PASS", (650,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
                 pf[3] = True 
-            else:
+           # else:
                 # Y Failed
-                cv2.putText(image, "FAIL", (650,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+                #cv2.putText(image, "FAIL", (650,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
                 
         time.sleep(1.5)
         currentData = arduino.read_until(b'}')
@@ -394,7 +403,7 @@ def measure(light_string):
     h = int(image.shape[0] * p)
     res_img = cv2.resize(image, (w,h))
     passCount = 0
-    for n in enumerate(pf):
+    for n, _ in enumerate(pf):
         if pf[n] == True:
             passCount += 1
     if passCount == 4:
@@ -403,3 +412,6 @@ def measure(light_string):
         passFail = False
     return res_img, horiz, vert, results, passFail 
 #End measure()
+
+#connect()
+#measure("JWL150-MD-WHI")

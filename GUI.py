@@ -184,6 +184,7 @@ while True:
             frame, horiz, vert, results, passFail = SLA.measure(light_string)
             invalConfig = False
         except:
+            print("failed")
             passFail = False
             invalConfig = True
 
