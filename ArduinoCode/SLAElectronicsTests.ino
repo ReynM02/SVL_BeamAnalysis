@@ -154,7 +154,6 @@ void PNPStrobe(int level){
 void serialHandshake(){
     String hs = "";
     int timeOut = 0;
-    Serial.write("S");
     hs = Serial.readString();
     while(hs != "K")// && timeOut <= 10000)
     {
@@ -257,12 +256,16 @@ String dubOverDrive(){
 
 bool triggerCam(char mode){
     // Background Image
+    Serial.write("S");
+    delay(200);
     digitalWrite(camPin, HIGH);
-    delay(expTime);
+    delay(100);
     digitalWrite(camPin, LOW);
     serialHandshake();
     //Foreground Image
     dac.setDACOutVoltage(5000, analog); // 10v analog
+    Serial.write("S");
+    delay(200);
     digitalWrite(NPNPin, HIGH); // Light on with NPN
     digitalWrite(camPin, HIGH);  // Camera Pulse Started
     delay(expTime);             

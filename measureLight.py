@@ -97,51 +97,48 @@ def CaptureExt(mode, exp):
     print("in CaptureExt()")
     with Vimba.get_instance() as vimba:
         cams = vimba.get_all_cameras()
+        cams[0].set_access_mode(AccessMode.Full)
         with cams[0] as cam:
+            cam.load_settings("EOLTestSettings.xml", PersistType.NoLUT)
             print('cam[0] found')
+            print(cam.get_feature_by_name("ExposureTime"))
+            expTime = cam.ExposureTime
+            expTime.set(exp)
             msg = str(mode) + str(exp)
             msgbyte = bytes(msg, 'utf-8')
             arduino.write(msgbyte)
             hs = arduino.read(1)
-            hs = hs.decode("UTF-8")
-            print(hs)
-            while hs != "S":
+            while hs != b'S':
                 hs = arduino.read(1)
-                hs = hs.decode("UTF-8")
-                #print(hs)
             try:
-                bgframe = cam.get_frame(timeout_ms=3000)
+                bgframe = cam.get_frame(timeout_ms=5000)
                 print("got bgframe")
                 #bgframe.convert_pixel_format(PixelFormat.Bgr8)
                 print("converted frame")
                 bgimage = bgframe.as_opencv_image()
                 print("saved as bgimage")
                 arduino.write(bytes("K", 'utf-8'))
-            except ValueError:
+            except:
                 print("timeout")
-                bgframe = cam.get_frame(timeout_ms=3000)
-                bgimage = bgframe.as_opencv_image()
+                #bgframe = cam.get_frame(timeout_ms=3000)
+                #bgimage = bgframe.as_opencv_image()
                 #arduino.write(bytes("K", 'utf-8'))
                 arduino.write(bytes("K", 'utf-8'))
 
-            hs2 = arduino.read_all()
-            hs2 = hs2.decode("UTF-8")
-            print(hs2)
-            while hs2 != "S":
+            hs2 = arduino.read(1)
+            while hs2 != b'S':
                 hs2 = arduino.read(1)
-                hs2 = hs2.decode("UTF-8")
-                #print(hs)
-            #try:
-            frame = cam.get_frame(timeout_ms=3000)
-            print("got frame")
-            #frame.convert_pixel_format(PixelFormat.Bgr8)
-            print("converted frame")
-            image = frame.as_opencv_image()
-            print("image saved as image")
-            arduino.write(bytes("K", 'utf-8'))
-            #except:
-                #print("timeout2 - continue anyway")
-                #arduino.write(bytes("K", 'utf-8'))
+            try:
+                frame = cam.get_frame(timeout_ms=5000)
+                print("got frame")
+                #frame.convert_pixel_format(PixelFormat.Bgr8)
+                print("converted frame")
+                image = frame.as_opencv_image()
+                print("image saved as image")
+                arduino.write(bytes("K", 'utf-8'))
+            except:
+                print("timeout2 - continue anyway")
+                arduino.write(bytes("K", 'utf-8'))
     test = False
     return image, test
 #End CaptureExt() 
@@ -413,5 +410,6 @@ def measure(light_string):
     return res_img, horiz, vert, results, passFail 
 #End measure()
 
+#### DEBUG MODE ####
 #connect()
 #measure("JWL150-MD-WHI")
