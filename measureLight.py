@@ -113,7 +113,7 @@ def CaptureExt(mode, exp):
             try:
                 bgframe = cam.get_frame(timeout_ms=5000)
                 print("got bgframe")
-                #bgframe.convert_pixel_format(PixelFormat.Bgr8)
+                bgframe.convert_pixel_format(PixelFormat.Bgr8)
                 print("converted frame")
                 bgimage = bgframe.as_opencv_image()
                 print("saved as bgimage")
@@ -131,7 +131,7 @@ def CaptureExt(mode, exp):
             try:
                 frame = cam.get_frame(timeout_ms=5000)
                 print("got frame")
-                #frame.convert_pixel_format(PixelFormat.Bgr8)
+                frame.convert_pixel_format(PixelFormat.Bgr8)
                 print("converted frame")
                 image = frame.as_opencv_image()
                 print("image saved as image")
