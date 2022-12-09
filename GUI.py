@@ -103,7 +103,7 @@ lists = [
 
 image_column = [
     [sg.Text("Beam Analysis", size=(30, 1), text_color="#134A8F", justification="center", font=["Kanit",48,"bold"], expand_x= True)],
-    [sg.Image(filename="", key="-IMAGE-", size=(100, 100), expand_x=True, background_color="#ffffff")],
+    [sg.Image(filename="", key="-IMAGE-", size=(100, 100), expand_x=True, expand_y=True, background_color="#ffffff")],
     [sg.Text("Light P/N:", font=["Open Sans",15,""]), sg.InputText(enable_events=True, size=(20, 5), font=["",15,""], key="-LIGHT_STRING-", do_not_clear=True)],
     [sg.Text("Light S/N:", font=["Open Sans",15,""]), sg.InputText(enable_events=True, size=(20, 5), font=["",15,""], key="-SERIAL_NUM-", do_not_clear=True)],
     #[sg.Column(lists)],
