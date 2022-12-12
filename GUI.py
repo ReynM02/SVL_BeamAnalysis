@@ -51,7 +51,6 @@ fig1 = plt.figure(1)                # Create a new figure
 ax1 = plt.subplot(111)              # Add a subplot to the current figure
 fig2 = plt.figure(2)                # Create a new figure
 ax2 = plt.subplot(111)              # Add a subplot to the current figure
-hidden = True
 
 
 
@@ -267,4 +266,5 @@ with Vimba.get_instance() as vimba:
     cams = vimba.get_all_cameras()
     cams[0].set_access_mode(AccessMode.Full)
     with cams[0] as cam:
+        cam.load_settings("EOLTestSettings.xml", PersistType.NoLUT)
         main()

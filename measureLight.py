@@ -99,9 +99,7 @@ def CaptureExt(cam, mode, exp):
     #    cams = vimba.get_all_cameras()
     #    cams[0].set_access_mode(AccessMode.Full)
     #    with cams[0] as cam:
-    cam.load_settings("EOLTestSettings.xml", PersistType.NoLUT)
     print('cam[0] found')
-    print(cam.get_feature_by_name("ExposureTime"))
     expTime = cam.ExposureTime
     expTime.set(exp)
     msg = str(mode) + str(exp)
