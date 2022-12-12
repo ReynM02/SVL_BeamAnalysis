@@ -119,7 +119,7 @@ report_column = [
     [sg.HorizontalSeparator()],
     [sg.Text("JWL150-MD-WHI\nSVL261609", font=["Kanit",15,"bold"], size=(13, 2), justification="left", expand_x=True, key="-PNSN-"),
         sg.Text("Status:", font=["Open Sans",15,"bold"], size=(7, 1), justification="right"),
-        sg.Text("FAILED", text_color="red", font=["Open Sans",20,"bold"], size=(6, 1), justification="center", relief="solid", border_width=1)],
+        sg.Text("FAIL", text_color="red", font=["Open Sans",20,"bold"], size=(4, 1), justification="center", relief="solid", border_width=1, key="-STATUS-")],
     [sg.Text("Total Flux:", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x=True),
         sg.Text("Flux", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-FLXMZRD-"),
         sg.Text("999999±999", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-FLXHL-"),
@@ -294,7 +294,35 @@ def main():
                     rowData = [light_string, serial_num]
                     rowData.extend(results)
                     append_list_as_row(csvPath, rowData)
-                    
+                    flux = results[0]
+                    cY = results[1]
+                    cX = results[2]
+                    xLen = results[3]
+                    yLen = results[4]
+                    npnCurrent = results[5]
+                    pnpCurrent10v = results[6]
+                    pnpCurrent5v = results[7]
+                    npnStrobe = results[8]
+                    pnpStrobe = results[9]
+
+                    if flux < data["intensityHigh"] and flux > data["intensityLow"]:
+                        window["-FLXPF-"].update(text="PASS", text_color='green')
+                    else:
+                        window["-FLXPF-"].update(text="FAIL", text_color='red')
+                    flxHLStr = str(data["intensityHigh"]-data["intensityLow"])+"±"+data["intensityLow"]-(data["intensityHigh"]-data["intensityLow"])
+                    window["-FLXHL-"].update(text=flxHLStr)
+
+                    yMid = yLen/2
+                    xMid = xLen/2
+                    symMZRDStr = "("+cX+","+cY+")"
+                    window["-SYMMZRD-"].update(text=symMZRDStr)
+                    if (cY-yMid) < data["symmetry_gap"] and (cX-xMid) < data["symmetry_gap"]:
+                        window["-SYMPF-"].update(text="PASS", text_color='green')
+                    else:
+                        window["-SYMPF-"].update(text="FAIL", text_color='red')
+                    symHLStr = "("+xMid+"±"+data["symmetry_gap"]+","+yMid+"±"+data["symmetry_gap"]+")"
+                    window["-SYMHL-"].update(text=symHLStr)
+
                     if passFail:
                         output = [
                             [sg.Text("", text_color="green", font=["",20,"bold"], justification="center", size=(10, 1))],               
@@ -302,6 +330,7 @@ def main():
                             [sg.Text(str(rowData))],
                             [sg.OK(size=(10,1), font=["",50,""],p=((15,0),(0,0)))]
                         ]
+                        window["-STATUS-"].update(text="PASS", text_color="green")
                     else:
                         output = [
                             [sg.Text("", text_color="green", font=["",20,"bold"], justification="center", size=(10, 1))],               
@@ -309,6 +338,7 @@ def main():
                             [sg.Text(str(rowData))],
                             [sg.OK(size=(10,1), font=["",50,""],p=((15,0),(0,0)))]
                         ]
+                        window["-STATUS-"].update(text="FAIL", text_color="red")
 
                     choice, _ = sg.Window('Measurment Data', output, modal=False).read(close=True)
             window['-MEASURE-'].update(disabled=False)
