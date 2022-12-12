@@ -11,6 +11,7 @@ import psutil
 import os
 from csv import writer
 import numpy as np
+from vimba import *
 
 buffer = 0
 user_list = psutil.users()
@@ -145,118 +146,124 @@ month, day, year = date.month, date.day, date.year
 
 print(month, day, year)
 
-### --- Main Loop --- ###
-while True:   
-    event, values = window.read(timeout=20) # Reads window actions waiting for inputs
-    # event is an action... event == "Exit" is Exit Button being pressed
-    if event == "Exit" or event == sg.WIN_CLOSED: # Exit Button Pressed or Window Closed
-        break
-    elif event == "-HIDE-":
-        if hidden == True:
-            window['-GRAPHS-'].update(visible=True)
-            hidden = False
-        else:
-            window['-GRAPHS-'].update(visible=False)
-            hidden = True
-    elif event == "-MEASURE-":
-        window['-MEASURE-'].update(disabled=True)
-        sysTime = datetime.datetime.now()
-        dateString = sysTime.strftime("%Y-%m-%d") + '_' + sysTime.strftime("%H%M%S")
-        light_string = values["-LIGHT_STRING-"]
-        serialNum = values["-SERIAL_NUM-"]
-        splitString = light_string.split('-')
-        #print(splitString)
-        try:
-            light = splitString[0]
-            mode = splitString[1]
-            color = splitString[2]
-            invalConfig = False
-        except IndexError:
-            sg.popup('        Error: Invalid Configuration\n Please Re-Enter Light P/N and S/N.', title="Error: InvalConfgErr", modal=True, icon=SVLIcon, font=["Open Sans",20,'bold'])
-            print("lightgistics")
-            invalConfig = True
-        if invalConfig == False:
+def main():
+    ### --- Main Loop --- ###
+    while True:   
+        event, values = window.read(timeout=20) # Reads window actions waiting for inputs
+        # event is an action... event == "Exit" is Exit Button being pressed
+        if event == "Exit" or event == sg.WIN_CLOSED: # Exit Button Pressed or Window Closed
+            break
+        elif event == "-HIDE-":
+            if hidden == True:
+                window['-GRAPHS-'].update(visible=True)
+                hidden = False
+            else:
+                window['-GRAPHS-'].update(visible=False)
+                hidden = True
+        elif event == "-MEASURE-":
+            window['-MEASURE-'].update(disabled=True)
+            sysTime = datetime.datetime.now()
+            dateString = sysTime.strftime("%Y-%m-%d") + '_' + sysTime.strftime("%H%M%S")
+            light_string = values["-LIGHT_STRING-"]
+            serialNum = values["-SERIAL_NUM-"]
+            splitString = light_string.split('-')
+            #print(splitString)
             try:
-                lens = splitString[3]
+                light = splitString[0]
+                mode = splitString[1]
+                color = splitString[2]
+                invalConfig = False
             except IndexError:
-                lens = ''
-            try:
-                pol = splitString[3]
-            except IndexError:
-                pol = ''
+                sg.popup('        Error: Invalid Configuration\n Please Re-Enter Light P/N and S/N.', title="Error: InvalConfgErr", modal=True, icon=SVLIcon, font=["Open Sans",20,'bold'])
+                print("lightgistics")
+                invalConfig = True
+            if invalConfig == False:
+                try:
+                    lens = splitString[3]
+                except IndexError:
+                    lens = ''
+                try:
+                    pol = splitString[3]
+                except IndexError:
+                    pol = ''
 
-            print(light_string)
+                print(light_string)
 
-            try:
-                frame, horiz, vert, results, passFail = SLA.measure(light_string)
-                didntRun = False
-            except:
-                print("failed")
-                passFail = False
-                didntRun = True
+                try:
+                    frame, horiz, vert, results, passFail = SLA.measure(light_string, cam)
+                    didntRun = False
+                except:
+                    print("failed")
+                    passFail = False
+                    didntRun = True
 
-            if didntRun == True:
-                sg.popup('                    Error: Program Error\n Alert Supervisor for Debuging or Try Again.', title="Error: PrgmErr", modal=True, icon=SVLIcon, font=["Open Sans",20,'bold'])
-            else:    
-                plot_figure(1, horiz[0], horiz[1])
-                plot_figure(2, vert[0], vert[1])
-                #frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-                if not os.path.exists(savePath):
-                    os.makedirs(savePath)
-                    os.makedirs(savePath+'/Images')
-                    os.makedirs(savePath+'/Data')
+                if didntRun == True:
+                    sg.popup('                    Error: Program Error\n Alert Supervisor for Debuging or Try Again.', title="Error: PrgmErr", modal=True, icon=SVLIcon, font=["Open Sans",20,'bold'])
+                else:    
+                    plot_figure(1, horiz[0], horiz[1])
+                    plot_figure(2, vert[0], vert[1])
+                    #frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+                    if not os.path.exists(savePath):
+                        os.makedirs(savePath)
+                        os.makedirs(savePath+'/Images')
+                        os.makedirs(savePath+'/Data')
 
-                rowData.extend(results)
+                    rowData.extend(results)
 
-                imgPath = savePath+"/Images/"
-                #print (os.path.join(imgPath, light_string+'_'+serialNum+'_'+dateString+'.jpg'))
-                isWritten = cv2.imwrite(imgPath+light_string+'_'+serialNum+'_'+dateString+'.jpg', frame)
+                    imgPath = savePath+"/Images/"
+                    #print (os.path.join(imgPath, light_string+'_'+serialNum+'_'+dateString+'.jpg'))
+                    isWritten = cv2.imwrite(imgPath+light_string+'_'+serialNum+'_'+dateString+'.jpg', frame)
 
-                if isWritten:
-                    print("image saved")
-                else:
-                    print("image not saved")
+                    if isWritten:
+                        print("image saved")
+                    else:
+                        print("image not saved")
 
-                imgbytes = cv2.imencode(".png", frame)[1].tobytes()
-                window["-IMAGE-"].update(data=imgbytes)
-                csvPath = savePath + '/Data/' + str(month) + '-' + str(day) + '-' + str(year) + '_Light_Measurements.csv'
-                rowData = [light_string, serial_num]
-                append_list_as_row(csvPath, rowData)
-                
-                if passFail:
-                    output = [
-                        [sg.Text("", text_color="green", font=["",20,"bold"], justification="center", size=(10, 1))],               
-                        [sg.Text("PASS", text_color="green", font=["",50,"bold"], justification="center", size=(10, 1))],
-                        [sg.Text(str(rowData))],
-                        [sg.OK(size=(10,1), font=["",50,""],p=((15,0),(0,0)))]
-                    ]
-                else:
-                    output = [
-                        [sg.Text("", text_color="green", font=["",20,"bold"], justification="center", size=(10, 1))],               
-                        [sg.Text("FAIL", text_color="red", font=["",50,"bold"], justification="center", size=(10, 1))],
-                        [sg.Text(str(rowData))],
-                        [sg.OK(size=(10,1), font=["",50,""],p=((15,0),(0,0)))]
-                    ]
+                    imgbytes = cv2.imencode(".png", frame)[1].tobytes()
+                    window["-IMAGE-"].update(data=imgbytes)
+                    csvPath = savePath + '/Data/' + str(month) + '-' + str(day) + '-' + str(year) + '_Light_Measurements.csv'
+                    rowData = [light_string, serial_num]
+                    append_list_as_row(csvPath, rowData)
+                    
+                    if passFail:
+                        output = [
+                            [sg.Text("", text_color="green", font=["",20,"bold"], justification="center", size=(10, 1))],               
+                            [sg.Text("PASS", text_color="green", font=["",50,"bold"], justification="center", size=(10, 1))],
+                            [sg.Text(str(rowData))],
+                            [sg.OK(size=(10,1), font=["",50,""],p=((15,0),(0,0)))]
+                        ]
+                    else:
+                        output = [
+                            [sg.Text("", text_color="green", font=["",20,"bold"], justification="center", size=(10, 1))],               
+                            [sg.Text("FAIL", text_color="red", font=["",50,"bold"], justification="center", size=(10, 1))],
+                            [sg.Text(str(rowData))],
+                            [sg.OK(size=(10,1), font=["",50,""],p=((15,0),(0,0)))]
+                        ]
 
-                choice, _ = sg.Window('Measurment Data', output, modal=False).read(close=True)
-        window['-MEASURE-'].update(disabled=False)
-    elif event == "-LIGHT-":
-        if values["-LIGHT-"] == 'JWL':
-            window["-SIZE-"].update(values=other_size)
-        else:
-            window["-SIZE-"].update(values=linear_size)
+                    choice, _ = sg.Window('Measurment Data', output, modal=False).read(close=True)
+            window['-MEASURE-'].update(disabled=False)
+        elif event == "-LIGHT-":
+            if values["-LIGHT-"] == 'JWL':
+                window["-SIZE-"].update(values=other_size)
+            else:
+                window["-SIZE-"].update(values=linear_size)
 
-    elif event == "-LIGHT_STRING-":
-        light_string = values["-LIGHT_STRING-"]
+        elif event == "-LIGHT_STRING-":
+            light_string = values["-LIGHT_STRING-"]
 
-        if 'SVL' in light_string:
-            window["-LIGHT_STRING-"].update(value='')
+            if 'SVL' in light_string:
+                window["-LIGHT_STRING-"].update(value='')
 
-    elif event == "-SERIAL_NUM-":
-        serial_num = values["-SERIAL_NUM-"]
+        elif event == "-SERIAL_NUM-":
+            serial_num = values["-SERIAL_NUM-"]
 
-        if 'S' not in serial_num:
-            window["-SERIAL_NUM-"].update(value='')       
+            if 'S' not in serial_num:
+                window["-SERIAL_NUM-"].update(value='')       
 
-window.close()
+    window.close()
 
+with Vimba.get_instance() as vimba:
+    cams = vimba.get_all_cameras()
+    cams[0].set_access_mode(AccessMode.Full)
+    with cams[0] as cam:
+        main()
