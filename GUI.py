@@ -13,13 +13,6 @@ from csv import writer
 import numpy as np
 from vimba import *
 
-buffer = 0
-user_list = psutil.users()
-user = user_list[0].name
-print(user)
-savePath = 'C:/Users/' + user + '/Documents/SmartLightAnalyzer'
-SLA.connect() # Connect to the electronics measurment tool
-
 # Pack the Graphs from MatPlotLib to TKinter
 def pack_figure(graph, figure):
     canvas = FigureCanvasTkAgg(figure, graph.Widget)
@@ -27,7 +20,7 @@ def pack_figure(graph, figure):
     plot_widget.pack(side='top', fill='both', expand=1)
     return plot_widget
 
-# Cleats and Plots the Graphs
+# Cleans and Plots the Graphs
 def plot_figure(index, x, y):
     fig = plt.figure(index)         # Select Graph to Change
     ax = plt.gca()                  # Get the current graph
@@ -51,8 +44,6 @@ fig1 = plt.figure(1)                # Create a new figure
 ax1 = plt.subplot(111)              # Add a subplot to the current figure
 fig2 = plt.figure(2)                # Create a new figure
 ax2 = plt.subplot(111)              # Add a subplot to the current figure
-
-
 
 sg.theme("SmartVision")
 
@@ -97,7 +88,7 @@ colors = [
 
 lists = [
     [sg.Combo(lights, default_value='LSR', key="-LIGHT-", enable_events=True),
-     sg.Combo(lens_config, default_value='S', key="-LENS-", enable_events=True)],
+        sg.Combo(lens_config, default_value='S', key="-LENS-", enable_events=True)],
     [sg.Combo(linear_size, default_value='300', key="-SIZE-", enable_events=True)],
     [sg.Combo(colors, default_value='WHI', key="-COLORS-")]
 ]
@@ -107,14 +98,77 @@ image_column = [
     [sg.Image(filename="", key="-IMAGE-", size=(100, 100), expand_x=True, expand_y=True, background_color="#ffffff")],
     [sg.Text("Light P/N:", font=["Open Sans",15,""]), sg.InputText(enable_events=True, size=(20, 5), font=["",15,""], key="-LIGHT_STRING-", do_not_clear=True)],
     [sg.Text("Light S/N:", font=["Open Sans",15,""]), sg.InputText(enable_events=True, size=(20, 5), font=["",15,""], key="-SERIAL_NUM-", do_not_clear=True)],
-    #[sg.Column(lists)],
     [sg.Button("Measure", size=(10,2), font=["Open Sans",20,"bold"], key="-MEASURE-")]
 ]
 
 graph_column = [
-    [sg.Text("Graph Analysis", font=["Kanit",32,"bold"], size=(10, 1), justification="center", expand_x= True)],
-    [sg.Graph((200, 100), (0, 0), (200, 100), key="Graph1", expand_x=True, expand_y=True)],
-    [sg.Graph((200, 100), (0, 0), (200, 100), key="Graph2", expand_x=True, expand_y=True)]
+    [sg.Text("Graph Analysis", font=["Kanit",32,"bold"], size=(10, 1), justification="center", expand_x= True),
+        sg.Button("Report", size=(10,1), font=["Open Sans",10,"bold"], key="-SHWRPRT-")],
+    [sg.Graph((200, 100), (0, 0), (200, 100), key="Graph1", expand_x=True)],
+    [sg.Graph((200, 100), (0, 0), (200, 100), key="Graph2", expand_x=True)]
+]
+
+#    [sg.Graph((200, 100), (0, 0), (200, 100), key="Graph1", expand_x=True)],
+#    [sg.Graph((200, 100), (0, 0), (200, 100), key="Graph2", expand_x=True)]
+
+report_column = [
+    [sg.Text("Measurements", font=["Kanit",32,"bold"], size=(10, 1), justification="center", expand_x= True),
+         sg.Button("Graphs", size=(10,1), font=["Open Sans",10,"bold"], key="-SHWGRPH-")],
+    [sg.Text("Test Station #1", font=["Kanit",20,"bold"], size=(10, 1), justification="left", expand_x= True),
+        sg.Text("Time Measured:", font=["Kanit",15,"bold"], size=(10, 1), justification="right", expand_x= True, key="-TIME-", border_width=1)],
+    [sg.HorizontalSeparator()],
+    [sg.Text("JWL150-MD-WHI\nSVL261609", font=["Kanit",15,"bold"], size=(13, 2), justification="left", expand_x=True, key="-PNSN-"),
+        sg.Text("Status:", font=["Open Sans",15,"bold"], size=(7, 1), justification="right"),
+        sg.Text("FAILED", text_color="red", font=["Open Sans",20,"bold"], size=(6, 1), justification="center", relief="solid", border_width=1)],
+    [sg.Text("Total Flux:", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x=True),
+        sg.Text("Flux", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-FLXMZRD-"),
+        sg.Text("999999±999", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-FLXHL-"),
+        sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-FLXPF-")],
+    [sg.Text("Center Lux:", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x= True),
+        sg.Text("Lux", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-LXMZRD-"),
+        sg.Text("999999±999", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-LXHL-"),
+        sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-LXPF-")],
+    [sg.Text("Symmetry:", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x= True),
+        sg.Text("(10,10)", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-SYMMZRD-"),
+        sg.Text("(99±9,99±9)", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-SYMHL-"),
+        sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-SYMPF-")],
+    [sg.Text("Beam Size:", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x= True),
+        sg.Text("(500,600)", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-SZMZRD-"),
+        sg.Text("(999±99,999±99)", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-SZHL-"),
+        sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-SZPF-")],
+    [sg.Text("Peak Current(Cont.):", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x= True),
+        sg.Text("200mA", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-PCRNTMZRD-"),
+        sg.Text("999±99", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-PCRNTHL-"),
+        sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-PCRNTPF-")],
+    [sg.Text("Peak Current(OD):", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x= True),
+        sg.Text("200mA", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-PCRNTOMZRD-"),
+        sg.Text("999±99", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-PCRNTOHL-"),
+        sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-PCRNTOPF-")],
+    [sg.Text("NPN Current:", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x= True),
+        sg.Text("200mA", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-NPNCRNTMZRD-"),
+        sg.Text("999±99", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-NPNCRNTHL-"),
+        sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-NPNCRNTPF-")],
+    [sg.Text("PNP Current(10v):", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x= True),
+        sg.Text("200mA", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-PNPHIMZRD-"),
+        sg.Text("999±99", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-PNPHIHL-"),
+        sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-PNPHIPF-")],
+    [sg.Text("PNP Current(5v):", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x= True),
+        sg.Text("200mA", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-PNPLOMZRD-"),
+        sg.Text("999±99", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-PNPLOHL-"),
+        sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-PNPLOPF-")],
+    [sg.Text("Analog 10v:", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x= True),
+        sg.Text("200mA", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-AHIMZRD-"),
+        sg.Text("999±99", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-AHIHL-"),
+        sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-AHIPF-")],
+    [sg.Text("Analog 5v:", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x= True),
+        sg.Text("200mA", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-ALOMZRD-"),
+        sg.Text("999±99", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-ALOHL-"),
+        sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-ALOPF-")],
+]
+
+advanced_column = [
+    [sg.Column(report_column, visible=True, key="-REPORT-", expand_x=True, expand_y=True),
+        sg.Column(graph_column, visible=False, key="-GRAPHS-", expand_x=True, expand_y=True)]
 ]
 
 # Define the window layout
@@ -122,7 +176,7 @@ layout = [
     [sg.Column(image_column, expand_x=True, expand_y=True, size_subsample_width=2),
     sg.Button("Advanced", font=["Open Sans",10,"bold"], size=(10,1), key="-HIDE-"),
     sg.VSeperator(),
-    sg.Column(graph_column, visible=False, key="-GRAPHS-", expand_x=True, expand_y=True)]
+    sg.Column(advanced_column, visible=False, key="-ADVNCED-", expand_x=True, expand_y=True)]
 ]
 
 
@@ -146,6 +200,14 @@ month, day, year = date.month, date.day, date.year
 print(month, day, year)
 
 def main():
+    ### --- Main Definitions --- ###
+    user_list = psutil.users() # Gets all connected users
+    user = user_list[0].name # Gets name of current user
+    print(user)
+    hidden = True
+    ReportOrGraph = 0 # 0 = Report, 1 = Graphs
+    savePath = 'C:/Users/' + user + '/Documents/SmartLightAnalyzer'
+    SLA.connect() # Connect to the electronics measurment tool
     ### --- Main Loop --- ###
     while True:   
         event, values = window.read(timeout=20) # Reads window actions waiting for inputs
@@ -154,11 +216,17 @@ def main():
             break
         elif event == "-HIDE-":
             if hidden == True:
-                window['-GRAPHS-'].update(visible=True)
+                window['-ADVNCED-'].update(visible=True)
                 hidden = False
             else:
-                window['-GRAPHS-'].update(visible=False)
+                window['-ADVNCED-'].update(visible=False)
                 hidden = True
+        elif event == "-SHWGRPH-":
+                window["-REPORT-"].update(visible=False)
+                window["-GRAPHS-"].update(visible=True)
+        elif event == "-SHWRPRT-":
+                window["-GRAPHS-"].update(visible=False)
+                window["-REPORT-"].update(visible=True)
         elif event == "-MEASURE-":
             window['-MEASURE-'].update(disabled=True)
             sysTime = datetime.datetime.now()
@@ -190,6 +258,7 @@ def main():
 
                 try:
                     frame, horiz, vert, results, passFail = SLA.measure(light_string, cam)
+                    data = SLA.loadConfig(light_string)
                     didntRun = False
                 except:
                     print("failed")
@@ -207,6 +276,7 @@ def main():
                         os.makedirs(savePath+'/Images')
                         os.makedirs(savePath+'/Data')
 
+                    # Update Values for Report Tab
 
 
                     imgPath = savePath+"/Images/"
