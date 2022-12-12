@@ -95,7 +95,7 @@ lists = [
 
 image_column = [
     [sg.Text("EOL Tester", size=(30, 1), text_color="#134A8F", justification="center", font=["Kanit",48,"bold"], expand_x= True)],
-    [sg.Image(filename="", key="-IMAGE-", size=(100, 100), expand_x=True, expand_y=True, background_color="#ffffff")],
+    [sg.Image(filename="", key="-IMAGE-", size=(80, 80), expand_x=True, expand_y=True, background_color="#ffffff")],
     [sg.Text("Light P/N:", font=["Open Sans",15,""]), sg.InputText(enable_events=True, size=(20, 5), font=["",15,""], key="-LIGHT_STRING-", do_not_clear=True)],
     [sg.Text("Light S/N:", font=["Open Sans",15,""]), sg.InputText(enable_events=True, size=(20, 5), font=["",15,""], key="-SERIAL_NUM-", do_not_clear=True)],
     [sg.Button("Measure", size=(10,2), font=["Open Sans",20,"bold"], key="-MEASURE-")]
@@ -121,8 +121,8 @@ report_column = [
         sg.Text("Status:", font=["Open Sans",15,"bold"], size=(7, 1), justification="right"),
         sg.Text("FAIL", text_color="red", font=["Open Sans",20,"bold"], size=(4, 1), justification="center", relief="solid", border_width=1, key="-STATUS-")],
     [sg.Text("Total Flux:", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x=True),
-        sg.Text("Flux", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-FLXMZRD-"),
-        sg.Text("999999±999", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-FLXHL-"),
+        sg.Text("99999999", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-FLXMZRD-"),
+        sg.Text("99999999±999", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-FLXHL-"),
         sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-FLXPF-")],
     [sg.Text("Center Lux:", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x= True),
         sg.Text("Lux", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-LXMZRD-"),
@@ -306,22 +306,22 @@ def main():
                     pnpStrobe = results[9]
 
                     if flux < data["intensityHigh"] and flux > data["intensityLow"]:
-                        window["-FLXPF-"].update(text="PASS", text_color='green')
+                        window["-FLXPF-"].update("PASS", text_color='green')
                     else:
-                        window["-FLXPF-"].update(text="FAIL", text_color='red')
+                        window["-FLXPF-"].update("FAIL", text_color='red')
                     flxHLStr = str(data["intensityHigh"]-data["intensityLow"])+"±"+data["intensityLow"]-(data["intensityHigh"]-data["intensityLow"])
-                    window["-FLXHL-"].update(text=flxHLStr)
+                    window["-FLXHL-"].update(flxHLStr)
 
                     yMid = yLen/2
                     xMid = xLen/2
                     symMZRDStr = "("+cX+","+cY+")"
-                    window["-SYMMZRD-"].update(text=symMZRDStr)
+                    window["-SYMMZRD-"].update(symMZRDStr)
                     if (cY-yMid) < data["symmetry_gap"] and (cX-xMid) < data["symmetry_gap"]:
-                        window["-SYMPF-"].update(text="PASS", text_color='green')
+                        window["-SYMPF-"].update("PASS", text_color='green')
                     else:
-                        window["-SYMPF-"].update(text="FAIL", text_color='red')
+                        window["-SYMPF-"].update("FAIL", text_color='red')
                     symHLStr = "("+xMid+"±"+data["symmetry_gap"]+","+yMid+"±"+data["symmetry_gap"]+")"
-                    window["-SYMHL-"].update(text=symHLStr)
+                    window["-SYMHL-"].update(symHLStr)
 
                     if passFail:
                         output = [
@@ -330,7 +330,7 @@ def main():
                             [sg.Text(str(rowData))],
                             [sg.OK(size=(10,1), font=["",50,""],p=((15,0),(0,0)))]
                         ]
-                        window["-STATUS-"].update(text="PASS", text_color="green")
+                        window["-STATUS-"].update("PASS", text_color="green")
                     else:
                         output = [
                             [sg.Text("", text_color="green", font=["",20,"bold"], justification="center", size=(10, 1))],               
@@ -338,7 +338,7 @@ def main():
                             [sg.Text(str(rowData))],
                             [sg.OK(size=(10,1), font=["",50,""],p=((15,0),(0,0)))]
                         ]
-                        window["-STATUS-"].update(text="FAIL", text_color="red")
+                        window["-STATUS-"].update("FAIL", text_color="red")
 
                     choice, _ = sg.Window('Measurment Data', output, modal=False).read(close=True)
             window['-MEASURE-'].update(disabled=False)
