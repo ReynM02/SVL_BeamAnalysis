@@ -206,8 +206,6 @@ while True:
                     os.makedirs(savePath+'/Images')
                     os.makedirs(savePath+'/Data')
 
-                rowData.extend(results)
-
                 imgPath = savePath+"/Images/"
                 #print (os.path.join(imgPath, light_string+'_'+serialNum+'_'+dateString+'.jpg'))
                 isWritten = cv2.imwrite(imgPath+light_string+'_'+serialNum+'_'+dateString+'.jpg', frame)
@@ -221,6 +219,7 @@ while True:
                 window["-IMAGE-"].update(data=imgbytes)
                 csvPath = savePath + '/Data/' + str(month) + '-' + str(day) + '-' + str(year) + '_Light_Measurements.csv'
                 rowData = [light_string, serial_num]
+                rowData.extend(results)
                 append_list_as_row(csvPath, rowData)
                 
                 if passFail:
@@ -238,7 +237,7 @@ while True:
                         [sg.OK(size=(10,1), font=["",50,""],p=((15,0),(0,0)))]
                     ]
 
-                choice, _ = sg.Window('Measurment Data', output, modal=False).read(close=True)
+                choice, _ = sg.Window('Measurment Data', output, modal=True).read(close=True)
         window['-MEASURE-'].update(disabled=False)
     elif event == "-LIGHT-":
         if values["-LIGHT-"] == 'JWL':
