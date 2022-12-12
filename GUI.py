@@ -208,7 +208,7 @@ def main():
                         os.makedirs(savePath+'/Images')
                         os.makedirs(savePath+'/Data')
 
-                    rowData.extend(results)
+
 
                     imgPath = savePath+"/Images/"
                     #print (os.path.join(imgPath, light_string+'_'+serialNum+'_'+dateString+'.jpg'))
@@ -223,6 +223,7 @@ def main():
                     window["-IMAGE-"].update(data=imgbytes)
                     csvPath = savePath + '/Data/' + str(month) + '-' + str(day) + '-' + str(year) + '_Light_Measurements.csv'
                     rowData = [light_string, serial_num]
+                    rowData.extend(results)
                     append_list_as_row(csvPath, rowData)
                     
                     if passFail:
