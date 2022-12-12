@@ -229,7 +229,7 @@ def measure(light_string, cam):
 
             symmetryHigh = int(midpoint_horizontal+(symmetryGap/2))
             symmetryLow = int(midpoint_horizontal-(symmetryGap/2))
-
+            
             # Calculate total Flux of 80% rectangle
             row = otherIndex[0][0]
             row_max = otherIndex[0][-1]
@@ -326,7 +326,7 @@ def measure(light_string, cam):
             # -- Intensity
             if flux > intensityLow and flux < intensityHigh:
                 # Flux Passed
-                cv2.putText(image, "PASS", (650,35), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2) 
+                #cv2.putText(image, "PASS", (650,35), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2) 
                 pf[0] = True
             #else:
                 # Flux Failed
@@ -335,7 +335,7 @@ def measure(light_string, cam):
             # -- Symmetry
             if cY > symmetryLow and cY < symmetryHigh:
                 # Symmetry Passed
-                cv2.putText(image, "PASS", (650,70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2) 
+                #cv2.putText(image, "PASS", (650,70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2) 
                 pf[1] = True
             #else:
                 # Symmetry Failed
