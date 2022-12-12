@@ -173,8 +173,8 @@ advanced_column = [
 
 # Define the window layout
 layout = [
-    [sg.Column(image_column, expand_x=True, expand_y=True, size_subsample_width=2),
-    sg.Button("Advanced", font=["Open Sans",10,"bold"], size=(10,1), key="-HIDE-"),
+    [sg.Column(image_column, expand_x=True, expand_y=True),
+    sg.Button("R\ne\np\no\nr\nt", font=["Open Sans",10,"bold"], size=(3,7), key="-HIDE-"),
     sg.VSeperator(),
     sg.Column(advanced_column, visible=False, key="-ADVNCED-", expand_x=True, expand_y=True)]
 ]
