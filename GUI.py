@@ -160,7 +160,7 @@ report_column = [
         sg.Text("200mA", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-AHIMZRD-"),
         sg.Text("999±99", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-AHIHL-"),
         sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-AHIPF-")],
-    [sg.Text("Analog 5v:", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x= True),
+    [sg.Text("Analog 0v:", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x= True),
         sg.Text("200mA", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-ALOMZRD-"),
         sg.Text("999±99", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-ALOHL-"),
         sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-ALOPF-")],
@@ -205,7 +205,6 @@ def main():
     user = user_list[0].name # Gets name of current user
     print(user)
     hidden = True
-    ReportOrGraph = 0 # 0 = Report, 1 = Graphs
     savePath = 'C:/Users/' + user + '/Documents/SmartLightAnalyzer'
     SLA.connect() # Connect to the electronics measurment tool
     ### --- Main Loop --- ###
@@ -234,6 +233,8 @@ def main():
             light_string = values["-LIGHT_STRING-"]
             serialNum = values["-SERIAL_NUM-"]
             splitString = light_string.split('-')
+            window["-TIME-"].update(str(sysTime.strftime("%Y-%m-%d") + ' ' + sysTime.strftime("%H:%M:%S")))
+            window["-PNSN-"].update(str(light_string + "\n" + serialNum))
             #print(splitString)
             try:
                 light = splitString[0]
@@ -318,13 +319,24 @@ def main():
                     xMid = xLen/2
                     symMZRDStr = "("+str(cX)+","+str(cY)+")"
                     window["-SYMMZRD-"].update(symMZRDStr)
-                    if (cY-yMid) < data["symmetry_gap"] and (cX-xMid) < data["symmetry_gap"]:
-                        window["-SYMPF-"].update("PASS", text_color='green')
-                    else:
+                    try:
+                        if (cY-yMid) < data["symmetry_gap"] and (cX-xMid) < data["symmetry_gap"]:
+                            window["-SYMPF-"].update("PASS", text_color='green')
+                        else:
+                            window["-SYMPF-"].update("FAIL", text_color='red')
+                    except:
                         window["-SYMPF-"].update("FAIL", text_color='red')
                     symHLStr = "("+str(xMid)+"±"+str(data["symmetry_gap"])+","+str(yMid)+"±"+str(data["symmetry_gap"])+")"
                     window["-SYMHL-"].update(symHLStr)
-
+                    
+                    window["-PCRNTMZRD-"].update(npnCurrent)
+                    window["-PCRNTOMZRD-"].update(npnStrobe)
+                    window["-NPNCRNTMZRD-"].update(npnCurrent)
+                    window["-PNPHIMZRD-"].update(pnpCurrent10v)
+                    window["-PNPLOMZRD-"].update(pnpCurrent5v)
+                    window["-AHIMZRD-"].update(npnCurrent)
+                    window["-ALOMZRD-"].update(npnStrobe)
+                    
                     if passFail:
                         output = [
                             [sg.Text("", text_color="green", font=["",20,"bold"], justification="center", size=(10, 1))],               
