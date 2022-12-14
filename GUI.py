@@ -303,24 +303,26 @@ def main():
                     pnpCurrent10v = results[6]
                     pnpCurrent5v = results[7]
                     npnStrobe = results[8]
-                    pnpStrobe = results[9]
+                    #pnpStrobe = results[9]
 
+                    flxMZRDStr = str(flux)
+                    window["-FLXMZRD-"].update(flxMZRDStr)
                     if flux < data["intensityHigh"] and flux > data["intensityLow"]:
                         window["-FLXPF-"].update("PASS", text_color='green')
                     else:
                         window["-FLXPF-"].update("FAIL", text_color='red')
-                    flxHLStr = str(data["intensityHigh"]-data["intensityLow"])+"±"+data["intensityLow"]-(data["intensityHigh"]-data["intensityLow"])
+                    flxHLStr = str(data["intensityHigh"]-data["intensityLow"])+"±"+str(data["intensityLow"]-(data["intensityHigh"]-data["intensityLow"]))
                     window["-FLXHL-"].update(flxHLStr)
 
                     yMid = yLen/2
                     xMid = xLen/2
-                    symMZRDStr = "("+cX+","+cY+")"
+                    symMZRDStr = "("+str(cX)+","+str(cY)+")"
                     window["-SYMMZRD-"].update(symMZRDStr)
                     if (cY-yMid) < data["symmetry_gap"] and (cX-xMid) < data["symmetry_gap"]:
                         window["-SYMPF-"].update("PASS", text_color='green')
                     else:
                         window["-SYMPF-"].update("FAIL", text_color='red')
-                    symHLStr = "("+xMid+"±"+data["symmetry_gap"]+","+yMid+"±"+data["symmetry_gap"]+")"
+                    symHLStr = "("+str(xMid)+"±"+str(data["symmetry_gap"])+","+str(yMid)+"±"+str(data["symmetry_gap"])+")"
                     window["-SYMHL-"].update(symHLStr)
 
                     if passFail:

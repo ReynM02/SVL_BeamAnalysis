@@ -389,7 +389,7 @@ def measure(light_string, cam):
         current = currentData[:-1]
         currentlist = current.split(",")        
         print(currentlist)
-        results = [flux, cY, horiz_length, vert_length]
+        results = [flux, cY, cX, horiz_length, vert_length]
         results.extend(currentlist)
         time.sleep(0.5)
         arduino.reset_input_buffer()
