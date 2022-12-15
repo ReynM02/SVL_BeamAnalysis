@@ -364,7 +364,7 @@ def measure(light_string, cam):
         vert = horiz
         if test == True:
                 cv2.putText(image, "TEST IMAGE", (150,440), cv2.FONT_HERSHEY_SIMPLEX, 5, (0,0,0), 6)
-        flux = cY = horiz_length = vert_length = 0 
+        flux = lux = cY = horiz_length = vert_length = 0 
         
         time.sleep(1.5)
         currentData = arduino.read_until(b'}')
@@ -372,7 +372,7 @@ def measure(light_string, cam):
         current = currentData[:-1]
         currentlist = current.split(",")        
         print(currentlist)
-        results = [flux, cY, cX, horiz_length, vert_length]
+        results = [flux, lux, cY, cX, horiz_length, vert_length]
         results.extend(currentlist)
         time.sleep(0.5)
         arduino.reset_input_buffer()
