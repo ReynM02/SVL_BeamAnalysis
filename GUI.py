@@ -258,7 +258,7 @@ def main():
                 print(light_string)
 
                 try:
-                    frame, horiz, vert, results, passFail = SLA.measure(light_string, cam)
+                    frame, horiz, vert, results, symGood, pf, passFail = SLA.measure(light_string, cam)
                     data = SLA.loadConfig(light_string)
                     didntRun = False
                 except:
@@ -296,46 +296,81 @@ def main():
                     rowData.extend(results)
                     append_list_as_row(csvPath, rowData)
                     flux = results[0]
-                    cY = results[1]
-                    cX = results[2]
-                    xLen = results[3]
-                    yLen = results[4]
-                    npnCurrent = results[5]
-                    pnpCurrent10v = results[6]
-                    pnpCurrent5v = results[7]
-                    npnStrobe = results[8]
-                    #pnpStrobe = results[9]
+                    lux = results[1]
+                    cY = results[2]
+                    cX = results[3]
+                    xLen = results[4]
+                    yLen = results[5]
+                    npnCurrent = results[6]
+                    pnpCurrent10v = results[7]
+                    pnpCurrent5v = results[8]
+                    odStrobe = results[9]
+                    
 
+                    ### - PASS FAIL ASSIGNMENTS - ###
+                    # - FLUX OPERATIONS
                     flxMZRDStr = str(flux)
                     window["-FLXMZRD-"].update(flxMZRDStr)
-                    if flux < data["intensityHigh"] and flux > data["intensityLow"]:
+                    if pf[0] == True:
                         window["-FLXPF-"].update("PASS", text_color='green')
                     else:
                         window["-FLXPF-"].update("FAIL", text_color='red')
-                    flxHLStr = str(data["intensityHigh"]-data["intensityLow"])+"±"+str(data["intensityLow"]-(data["intensityHigh"]-data["intensityLow"]))
+                    flxHLStr = str(data["flux_good"])+"±"+str(data["flux_tolerance"])
                     window["-FLXHL-"].update(flxHLStr)
 
-                    yMid = yLen/2
-                    xMid = xLen/2
+                    # - LUX OPERATIONS
+                    window["-LXMZRD-"].update(lux)
+                    if pf[1] == True:
+                        window["-LXPF-"].update("PASS", text_color='green')
+                    else:
+                        window["-LXPF-"].update("FAIL", text_color='red')
+                    lxHLStr = str(data["lux_good"])+"±"+str(data["lux_tolerance"])
+                    window["-LXHL-"].update(lxHLStr)
+
+                    # - SYMMETRY OPERATIONS
                     symMZRDStr = "("+str(cX)+","+str(cY)+")"
                     window["-SYMMZRD-"].update(symMZRDStr)
-                    try:
-                        if (cY-yMid) < data["symmetry_gap"] and (cX-xMid) < data["symmetry_gap"]:
-                            window["-SYMPF-"].update("PASS", text_color='green')
-                        else:
-                            window["-SYMPF-"].update("FAIL", text_color='red')
-                    except:
+                    if pf[1] == True:
+                        window["-SYMPF-"].update("PASS", text_color='green')
+                    else:
                         window["-SYMPF-"].update("FAIL", text_color='red')
-                    symHLStr = "("+str(xMid)+"±"+str(data["symmetry_gap"])+","+str(yMid)+"±"+str(data["symmetry_gap"])+")"
+                    symHLStr = "("+ str(symGood[0]) +","+str(symGood[1])+"±"+str(data["symmetry_tolerance"])+")"
                     window["-SYMHL-"].update(symHLStr)
                     
-                    window["-PCRNTMZRD-"].update(npnCurrent)
-                    window["-PCRNTOMZRD-"].update(npnStrobe)
-                    window["-NPNCRNTMZRD-"].update(npnCurrent)
-                    window["-PNPHIMZRD-"].update(pnpCurrent10v)
-                    window["-PNPLOMZRD-"].update(pnpCurrent5v)
-                    window["-AHIMZRD-"].update(npnCurrent)
-                    window["-ALOMZRD-"].update(npnStrobe)
+                    # - BEAM-SIZE OPERATIONS
+                    szMZRDStr = "("+str(xLen)+","+str(yLen)+")"
+                    window["-SZMZRD-"].update(szMZRDStr)
+                    if pf[2] == True:
+                        window["-SZPF-"].update("PASS", text_color='green')
+                    else:
+                        window["-SZPF-"].update("FAIL", text_color='red')
+                    szHLStr = "("+ str(data["x_good"]) + "±" + str(data["x_tolerance"]) +","+str(symGood[1])+"±"+str(data["symmetry_tolerance"])+")"
+                    window["-SZHL-"].update(szHLStr)
+
+                    # - CURRENT OPERATIONS
+                    # High/Low Strings
+                    pcrntHLStr = str(data["cont_peak_current_good"]) + "±" + str(data["cont_peak_current_tolerance"])
+                    window["-PCRNTHL-"].update(pcrntHLStr)
+                    pcrntoHLStr = str(data["od_peak_current_good"]) + "±" + str(data["od_peak_current_tolerance"])
+                    window["-PCRNOTHL-"].update(pcrntoHLStr)
+                    npncrntHLStr = str(data["npn_current_good"]) + "±" + str(data["npn_current_tolerance"])
+                    window["-NPNCRNTHL-"].update(npncrntHLStr)
+                    pnphiHLStr = str(data["pnp_high_current_good"]) + "±" + str(data["pnp_high_current_tolerance"])
+                    window["-PNPHIHL-"].update(pnphiHLStr)
+                    pnploHLStr = str(data["pnp_low_current_good"]) + "±" + str(data["pnp_low_current_tolerance"])
+                    window["-PNPLOHL-"].update(pnploHLStr)
+                    ahiHLStr = str(data["analog_high_current_good"]) + "±" + str(data["analog_high_current_tolerance"])
+                    window["-AHIHL-"].update(ahiHLStr)
+                    alowHLStr = str(data["analog_low_current_good"]) + "±" + str(data["analog_low_current_tolerance"])
+                    window["-ALOWHL-"].update(alowHLStr)
+                    # Pass/Fail messages
+                    window["-PCRNTMZRD-"].update(npnCurrent)    # peak current from cont. mode
+                    window["-PCRNTOMZRD-"].update(odStrobe)     # peak current from OD mode
+                    window["-NPNCRNTMZRD-"].update(npnCurrent)  # peak current when triggered with NPN line
+                    window["-PNPHIMZRD-"].update(pnpCurrent10v) # peak current when triggered with 10v on PNP line
+                    window["-PNPLOMZRD-"].update(pnpCurrent5v)  # peak current when triggered with 5v on PNP line
+                    window["-AHIMZRD-"].update(npnCurrent)      # peak current when triggered with analog at 10v
+                    window["-ALOMZRD-"].update(pnpCurrent5v)    # peak current when triggered with analog at 5v
                     
                     if passFail:
                         output = [
@@ -380,5 +415,5 @@ with Vimba.get_instance() as vimba:
     cams = vimba.get_all_cameras()
     cams[0].set_access_mode(AccessMode.Full)
     with cams[0] as cam:
-        cam.load_settings("EOLTestSettings.xml", PersistType.NoLUT)
+        #cam.load_settings("EOLTestSettings.xml", PersistType.NoLUT)
         main()
