@@ -309,22 +309,22 @@ def main():
 
                     ### - PASS FAIL ASSIGNMENTS - ###
                     # - FLUX OPERATIONS
-                    flxMZRDStr = str("{:.3e}".format(flux))
+                    flxMZRDStr = str("{:.1e}".format(flux))
                     window["-FLXMZRD-"].update(flxMZRDStr)
                     if pf[0] == True:
                         window["-FLXPF-"].update("PASS", text_color='green')
                     else:
                         window["-FLXPF-"].update("FAIL", text_color='red')
-                    flxHLStr = str("{:.3e}".format(data["flux_good"]))+"±"+str("{:.3e}".format(data["flux_tolerance"]))
+                    flxHLStr = str("{:.1e}".format(data["flux_good"]))+"±"+str("{:.1e}".format(data["flux_tolerance"]))
                     window["-FLXHL-"].update(flxHLStr)
 
                     # - LUX OPERATIONS
-                    window["-LXMZRD-"].update(lux)
+                    window["-LXMZRD-"].update("{:.1e}".format(lux))
                     if pf[1] == True:
                         window["-LXPF-"].update("PASS", text_color='green')
                     else:
                         window["-LXPF-"].update("FAIL", text_color='red')
-                    lxHLStr = str(data["lux_good"])+"±"+str(data["lux_tolerance"])
+                    lxHLStr = str("{:.1e}".format(data["lux_good"]))+"±"+str(data["lux_tolerance"])
                     window["-LXHL-"].update(lxHLStr)
 
                     # - SYMMETRY OPERATIONS
