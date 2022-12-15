@@ -93,12 +93,16 @@ def capture(light, lightColor, exp): #Captures Image, Performs Background Subtra
     return image, test
 #End Capture()
 
-def CaptureExt(cam, mode, exp):
+def unwarpImg(img, src, dst):
+    h, w = img.shape[:2]
+    # use cv2.getPerspectiveTransform() to get M, the transform matrix, and Minv, the inverse
+    M = cv2.getPerspectiveTransform(src, dst)
+    # use cv2.warpPerspective() to warp your image to a top-down view
+    warped = cv2.warpPerspective(img, M, (w, h), flags=cv2.INTER_LINEAR)
+    return warped
+
+def CaptureExt(cam, mode, exp, config):
     print("in CaptureExt()")
-    #with Vimba.get_instance() as vimba:
-    #    cams = vimba.get_all_cameras()
-    #    cams[0].set_access_mode(AccessMode.Full)
-    #    with cams[0] as cam:
     print('cam[0] found')
     expTime = cam.ExposureTime
     expTime.set(exp)
@@ -135,7 +139,13 @@ def CaptureExt(cam, mode, exp):
         print("timeout2 - continue anyway")
         arduino.write(bytes("K", 'utf-8'))
     test = False
-    return image, test
+    image = image - bgimage
+    src = np.asarray(config["src"])
+    dst = np.asarray(config["dst"])
+    print(src)
+    dst = config["dst"]
+    unwarped = unwarpImg(image, src, dst)
+    return unwarped, test
 #End CaptureExt() 
 
 def loadConfig(light_string):
@@ -153,6 +163,7 @@ def loadConfig(light_string):
 def measure(light_string, cam):
     # Load Config for Light
     data = loadConfig(light_string)
+    config = loadConfig("system_setup")
     # Get Light Mode from Config
     mode = data['mode']
     
@@ -161,7 +172,7 @@ def measure(light_string, cam):
 
     # Obtain Image
     #image, test = capture(data["light"], data["color"], data["exposure"])
-    image, test = CaptureExt(cam, mode, data["exposure"])
+    image, test = CaptureExt(cam, mode, data["exposure"], config)
     print("received img")
     # Grab Lut Exported From Zemax 
     zemaxLut = lut.finalLut
