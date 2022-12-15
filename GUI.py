@@ -160,7 +160,7 @@ report_column = [
         sg.Text("200mA", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-AHIMZRD-"),
         sg.Text("999±99", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-AHIHL-"),
         sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-AHIPF-")],
-    [sg.Text("Analog 0v:", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x= True),
+    [sg.Text("Analog 5v:", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x= True),
         sg.Text("200mA", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-ALOMZRD-"),
         sg.Text("999±99", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-ALOHL-"),
         sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-ALOPF-")],
@@ -305,17 +305,17 @@ def main():
                     pnpCurrent10v = results[7]
                     pnpCurrent5v = results[8]
                     odStrobe = results[9]
-                    
+                  
 
                     ### - PASS FAIL ASSIGNMENTS - ###
                     # - FLUX OPERATIONS
-                    flxMZRDStr = str(flux)
+                    flxMZRDStr = str("{:.3e}".format(flux))
                     window["-FLXMZRD-"].update(flxMZRDStr)
                     if pf[0] == True:
                         window["-FLXPF-"].update("PASS", text_color='green')
                     else:
                         window["-FLXPF-"].update("FAIL", text_color='red')
-                    flxHLStr = str(data["flux_good"])+"±"+str(data["flux_tolerance"])
+                    flxHLStr = str("{:.3e}".format(data["flux_good"]))+"±"+str("{:.3e}".format(data["flux_tolerance"]))
                     window["-FLXHL-"].update(flxHLStr)
 
                     # - LUX OPERATIONS
@@ -352,7 +352,7 @@ def main():
                     pcrntHLStr = str(data["cont_peak_current_good"]) + "±" + str(data["cont_peak_current_tolerance"])
                     window["-PCRNTHL-"].update(pcrntHLStr)
                     pcrntoHLStr = str(data["od_peak_current_good"]) + "±" + str(data["od_peak_current_tolerance"])
-                    window["-PCRNOTHL-"].update(pcrntoHLStr)
+                    window["-PCRNTOHL-"].update(pcrntoHLStr)
                     npncrntHLStr = str(data["npn_current_good"]) + "±" + str(data["npn_current_tolerance"])
                     window["-NPNCRNTHL-"].update(npncrntHLStr)
                     pnphiHLStr = str(data["pnp_high_current_good"]) + "±" + str(data["pnp_high_current_tolerance"])
@@ -362,7 +362,7 @@ def main():
                     ahiHLStr = str(data["analog_high_current_good"]) + "±" + str(data["analog_high_current_tolerance"])
                     window["-AHIHL-"].update(ahiHLStr)
                     alowHLStr = str(data["analog_low_current_good"]) + "±" + str(data["analog_low_current_tolerance"])
-                    window["-ALOWHL-"].update(alowHLStr)
+                    window["-ALOHL-"].update(alowHLStr)
                     # Pass/Fail messages
                     window["-PCRNTMZRD-"].update(npnCurrent)    # peak current from cont. mode
                     window["-PCRNTOMZRD-"].update(odStrobe)     # peak current from OD mode

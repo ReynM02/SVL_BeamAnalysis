@@ -94,11 +94,15 @@ def capture(light, lightColor, exp): #Captures Image, Performs Background Subtra
 #End Capture()
 
 def unwarpImg(img, src, dst):
+    print("in unwarp")
     h, w = img.shape[:2]
+    print("got H, W")
     # use cv2.getPerspectiveTransform() to get M, the transform matrix, and Minv, the inverse
     M = cv2.getPerspectiveTransform(src, dst)
+    print("got perspective")
     # use cv2.warpPerspective() to warp your image to a top-down view
     warped = cv2.warpPerspective(img, M, (w, h), flags=cv2.INTER_LINEAR)
+    print("warped img")
     return warped
 
 def CaptureExt(cam, mode, exp, config):
@@ -140,11 +144,11 @@ def CaptureExt(cam, mode, exp, config):
         arduino.write(bytes("K", 'utf-8'))
     test = False
     image = image - bgimage
-    src = np.asarray(config["src"])
-    dst = np.asarray(config["dst"])
-    print(src)
-    dst = config["dst"]
+    print("bg sub done")
+    src = np.float32(config["src"])
+    dst = np.float32(config["dst"])
     unwarped = unwarpImg(image, src, dst)
+    print("unwarped image")
     return unwarped, test
 #End CaptureExt() 
 
@@ -195,6 +199,7 @@ def measure(light_string, cam):
 
     # Initiate Flux Value
     flux = 0
+    lux = 0
 
     # Blur The Image
     filteredImage = cv2.GaussianBlur(image,(15,15),0)
@@ -238,14 +243,15 @@ def measure(light_string, cam):
             luxHorizontal = np.arange(midpoint_horizontal-10, midpoint_horizontal+10)
             luxvertical = [midpoint_vertical-10, midpoint_vertical+10]
             luxBox = luxHorizontal
-            while luxvertical[1]+1 < luxvertical[2]:
+            while luxvertical[0]+1 < luxvertical[1]:
                 luxBox = np.vstack((luxBox, luxHorizontal))
+                luxvertical[0] = luxvertical[0]+1
 
             luxMinVal = np.asarray(luxBox[1]).min()
             luxMaxVal = np.asarray(luxBox[1]).max()
 
-            luxHigh = data["lux"] + data["lux_tolerance"]
-            luxLow = data["lux"] - data["lux_tolerance"]
+            luxHigh = data["lux_good"] + data["lux_tolerance"]
+            luxLow = data["lux_good"] - data["lux_tolerance"]
 
             symmetryHigh = int(midpoint_horizontal+(symmetryGap/2))
             symmetryLow = int(midpoint_horizontal-(symmetryGap/2))
@@ -255,7 +261,7 @@ def measure(light_string, cam):
             row_max = uniformityIndex[0][-1]
             luxRow = luxBox[0][0]
             luxRow_Max = luxBox[0][-1]
-
+             
             while row <= row_max:
                 col = minVal
                 col_max = maxVal_2
@@ -403,5 +409,10 @@ def measure(light_string, cam):
 #End measure()
 
 #### DEBUG MODE ####
-#connect()
-#measure("JWL150-MD-WHI")
+#with Vimba.get_instance() as vimba:
+#    cams = vimba.get_all_cameras()
+#    cams[0].set_access_mode(AccessMode.Full)
+#    with cams[0] as cam:
+#        cam.load_settings("EOLTestSettings.xml", PersistType.NoLUT)
+#        connect()
+#        measure("JWL150-MD-WHI", cam)

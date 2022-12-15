@@ -26,6 +26,6 @@
     "pnp_low_current_tolerance": 2,
     "analog_high_current_good": 50,
     "analog_high_current_tolerance": 2,
-    "analog_low_current_good": 200,
-    "analog_low_current_tolerance": 10
+    "analog_low_current_good": 30,
+    "analog_low_current_tolerance": 2
 }
