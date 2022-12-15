@@ -118,9 +118,6 @@ def CaptureExt(cam, mode, exp):
         arduino.write(bytes("K", 'utf-8'))
     except:
         print("timeout")
-        #bgframe = cam.get_frame(timeout_ms=3000)
-        #bgimage = bgframe.as_opencv_image()
-        #arduino.write(bytes("K", 'utf-8'))
         arduino.write(bytes("K", 'utf-8'))
 
     hs2 = arduino.read(1)
@@ -170,20 +167,20 @@ def measure(light_string, cam):
     zemaxLut = lut.finalLut
     
     # Set Uniformity Value 
-    uniformityValue = 255*0.8
+    uniformityValue = 255*0.8  #80%
 
     ## -- Set Pass/Fail Thresholds From Config -- ##
     # - Intensity
-    intensityHigh = data['intensityHigh']
-    intensityLow = data['intensityLow']
+    intensityHigh = data['flux_good'] + data["flux_tolerance"]
+    intensityLow = data['flux_good'] - data["flux_tolerance"]
     # - Symmetry
-    symmetryGap = data['symmetry_gap']
+    symmetryGap = data['symmetry_tolerance']
     # - X Vlaue
-    xHigh = data['xHigh']
-    xLow = data['xLow']
+    xHigh = data['x_good'] + data["x_tolerance"]
+    xLow = data['x_good'] - data["x_tolerance"]
     # - Y Value
-    yHigh = data['yHigh']
-    yLow = data['yLow']
+    yHigh = data['y_good'] + data["y_tolerance"]
+    yLow = data['y_good'] - data["y_tolerance"]
 
     # Initiate Flux Value
     flux = 0
@@ -217,22 +214,36 @@ def measure(light_string, cam):
         print("blob found")
         # Create an Array of Pixel Locations (x,y) For Pixels With an Intensity
         # Greater Than or Equal to uniformityValue  
-        otherIndex = np.where(filteredImage >= uniformityValue)
-
+        uniformityIndex = np.where(filteredImage >= uniformityValue)
+        
         # Secondary Check for Blob Presence
-        if len(otherIndex[0]) > 0:
-            minVal = np.asarray(otherIndex[1]).min()
-            maxVal_2 = np.asarray(otherIndex[1]).max()
+        if len(uniformityIndex[0]) > 0:
+            minVal = np.asarray(uniformityIndex[1]).min()
+            maxVal_2 = np.asarray(uniformityIndex[1]).max()
 
             midpoint_vertical = int((maxVal_2 + minVal) / 2)
-            midpoint_horizontal = int((otherIndex[0][-1] + otherIndex[0][0]) / 2)
+            midpoint_horizontal = int((uniformityIndex[0][-1] + uniformityIndex[0][0]) / 2)
+
+            luxHorizontal = np.arange(midpoint_horizontal-10, midpoint_horizontal+10)
+            luxvertical = [midpoint_vertical-10, midpoint_vertical+10]
+            luxBox = luxHorizontal
+            while luxvertical[1]+1 < luxvertical[2]:
+                luxBox = np.vstack((luxBox, luxHorizontal))
+
+            luxMinVal = np.asarray(luxBox[1]).min()
+            luxMaxVal = np.asarray(luxBox[1]).max()
+
+            luxHigh = data["lux"] + data["lux_tolerance"]
+            luxLow = data["lux"] - data["lux_tolerance"]
 
             symmetryHigh = int(midpoint_horizontal+(symmetryGap/2))
             symmetryLow = int(midpoint_horizontal-(symmetryGap/2))
 
             # Calculate total Flux of 80% rectangle
-            row = otherIndex[0][0]
-            row_max = otherIndex[0][-1]
+            row = uniformityIndex[0][0]
+            row_max = uniformityIndex[0][-1]
+            luxRow = luxBox[0][0]
+            luxRow_Max = luxBox[0][-1]
 
             while row <= row_max:
                 col = minVal
@@ -241,16 +252,24 @@ def measure(light_string, cam):
                     flux = flux + bwImage[row-1][col-1]
                     col = col+1
                 row = row+1
+            
+            while luxRow <= luxRow_Max:
+                col = luxMinVal
+                col_max = luxMaxVal
+                while col <= col_max:
+                    lux = lux + bwImage[row-1][col-1]
+                    col = col+1
+                luxRow = luxRow+1
 
             # Define x and y start/end values for cross section profiles
-            y_start = otherIndex[0][0]
-            y_end = otherIndex[0][-1]
+            y_start = uniformityIndex[0][0]
+            y_end = uniformityIndex[0][-1]
             x_start = minVal
             x_end = maxVal_2
 
             # Define length of horizontal and vertical cross section array
             horiz_length = maxVal_2-minVal
-            vert_length = otherIndex[0][-1]-otherIndex[0][0]
+            vert_length = uniformityIndex[0][-1]-uniformityIndex[0][0]
             horizontal_profile = np.arange(horiz_length)
             vertical_profile = np.arange(vert_length)
 
@@ -278,10 +297,10 @@ def measure(light_string, cam):
             image = cv2.LUT(image, zemaxLut)
 
             #Draw 80% Box
-            cv2.rectangle(image, (minVal, otherIndex[0][0]), (maxVal_2, otherIndex[0][-1]),
+            cv2.rectangle(image, (minVal, uniformityIndex[0][0]), (maxVal_2, uniformityIndex[0][-1]),
                 (255, 255, 255), 2)
             # Draw Cross Section Lines For Visual Feedback
-            cv2.line(image, (cX, otherIndex[0][0]), (cX, otherIndex[0][-1]) ,(0, 0, 0), 2)
+            cv2.line(image, (cX, uniformityIndex[0][0]), (cX, uniformityIndex[0][-1]) ,(0, 0, 0), 2)
             cv2.line(image, (minVal, cY), (maxVal_2, cY), (0, 0, 0), 2)
 
             #Draw Center of 80% Rectangle and Label
@@ -295,77 +314,41 @@ def measure(light_string, cam):
             # Arrange and plot cross section data using MatPlotLib
             horiz_x = np.array(range(maxVal_2-minVal))
             horiz_y = horizontal_profile
-            vert_x = np.array(range(otherIndex[0][-1]-otherIndex[0][0]))
+            vert_x = np.array(range(uniformityIndex[0][-1]-uniformityIndex[0][0]))
             vert_y = vertical_profile
 
             horiz = [horiz_x, horiz_y]
             vert = [vert_x, vert_y]
 
-            # Setup Text Additions 
-            # - Pass/Fail values
-            #cv2.putText(image, "I: " + str(intensityLow) + ", " + str(intensityHigh) + ", " + str(flux), (34,35), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2) #Total Flux
-            #cv2.putText(image, "S: " + str(symmetryLow) + ", " + str(symmetryHigh) + ", " + str(cY), (25,70), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2) #Beam Symmetry
-            #cv2.putText(image, "x: " + str(xLow) + ", " + str(xHigh) + ", " + str(horiz_length), (25,105), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2) #X value - 80% Uniformity Size
-            #cv2.putText(image, "y: " + str(yLow) + ", " + str(yHigh) + ", " + str(vert_length), (25,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2) #Y value - 80% Uniformity Size
-            # - Light P/N + Family
-            PN = data["light"] + str(data["size"]) + "-" + data["color"]
-            #cv2.putText(image, PN, (1142,35), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2) #Light Part Number
-            #cv2.putText(image, data["light"] + " Family", (1142,60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2) #Light Family(First part of the Part Number) - redundant?
-            # - Date & Time
-            # -- Obtain date and time
-            sysTime = datetime.datetime.now()
-            # -- Parse Date and Time Data 
-            #cv2.putText(image, sysTime.strftime("%Y-%m-%d"), (1150,675), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2) #Date of capture - will update each time the script runs
-            #cv2.putText(image, sysTime.strftime("%H:%M:%S"), (1192,700), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2) #Time of capture - will update each time the script runs
-            # - Add logo on bottom of image
-                #todo: Append the long logo to the bottom of the image, size accordingly
-                #for now just use text
-            #cv2.putText(image, "SMART VISION LIGHTS", (25,700), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2)
             # - Pass/Fail data
             pf = [False, False, False, False]
-            # -- Intensity
+            # -- Flux
             if flux > intensityLow and flux < intensityHigh:
                 # Flux Passed
-                #cv2.putText(image, "PASS", (650,35), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2) 
                 pf[0] = True
-            #else:
-                # Flux Failed
-                #cv2.putText(image, "FAIL", (650,35), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2) 
+
+            # -- LUX
+            if lux > luxLow and lux < luxHigh:
+                pf[1] = True
 
             # -- Symmetry
-            if cY-midpoint_vertical < data["symmetry_gap"] and cX-midpoint_horizontal < data["symmetry_gap"]:
+            if cY-midpoint_vertical < symmetryGap and cX-midpoint_horizontal < symmetryGap:
                 # Symmetry Passed
-                #cv2.putText(image, "PASS", (650,70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2) 
-                pf[1] = True
-            #else:
-                # Symmetry Failed
-                #cv2.putText(image, "FAIL", (650,70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2) 
+                pf[2] = True
 
-            # -- X Value
-            if horiz_length > xLow and horiz_length < xHigh:
+            # -- X,Y Value
+            if horiz_length > xLow and horiz_length < xHigh and vert_length > yLow and vert_length < yHigh:
                 # X Passed
-                #cv2.putText(image, "PASS", (650,105), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
-                pf[2] = True 
-            #else:
-                # X Failed
-                #cv2.putText(image, "FAIL", (650,105), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2) 
-
-            # -- Y Value
-            if vert_length > yLow and vert_length < yHigh:
-                # Y Passed
-                #cv2.putText(image, "PASS", (650,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
                 pf[3] = True 
-           # else:
-                # Y Failed
-                #cv2.putText(image, "FAIL", (650,140), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
-                
+
+        symGood = [cX-midpoint_horizontal, cY-midpoint_vertical]
         time.sleep(1.5)
         currentData = arduino.read_until(b'}')
         currentData = currentData.decode("UTF-8")
         current = currentData[:-1]
         currentlist = current.split(",")        
         print(currentlist)
-        results = [flux, cY, cX, horiz_length, vert_length]
+        results = [flux, lux, cY, cX, horiz_length, vert_length]
         results.extend(currentlist)
         time.sleep(0.5)
         arduino.reset_input_buffer()          
@@ -405,7 +388,7 @@ def measure(light_string, cam):
         passFail = True
     else:
         passFail = False
-    return res_img, horiz, vert, results, passFail 
+    return res_img, horiz, vert, results, symGood, pf, passFail 
 #End measure()
 
 #### DEBUG MODE ####
