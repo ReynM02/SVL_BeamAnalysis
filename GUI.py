@@ -179,7 +179,6 @@ layout = [
     sg.Column(advanced_column, visible=False, key="-ADVNCED-", expand_x=True, expand_y=True)]
 ]
 
-
 # Create the window and show it
 window = sg.Window('Smart Vision Lights Beam Analysis', layout, finalize=True, resizable=True, icon=SVLIcon)
 window.maximize()

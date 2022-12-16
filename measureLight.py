@@ -105,6 +105,22 @@ def unwarpImg(img, src, dst):
     print("warped img")
     return warped
 
+def flatFieldCorrection(rawImg):
+    print("in FFC")
+    flatImg = cv2.imread("FlatImg.bmp")
+    darkImg = cv2.imread("DarkImg.bmp")
+
+    flatImg = cv2.cvtColor(flatImg, cv2.COLOR_BGR2GRAY)
+    darkImg = cv2.cvtColor(darkImg, cv2.COLOR_BGR2GRAY)
+
+    fdImg = flatImg-darkImg
+    m = np.average(fdImg)
+    gain = m/fdImg
+
+    correctedImg = ((rawImg - darkImg) * m) / fdImg
+
+    return correctedImg
+
 def CaptureExt(cam, mode, exp, config):
     print("in CaptureExt()")
     print('cam[0] found')
@@ -149,7 +165,12 @@ def CaptureExt(cam, mode, exp, config):
     dst = np.float32(config["dst"])
     unwarped = unwarpImg(image, src, dst)
     print("unwarped image")
-    return unwarped, test
+    beamImg = cv2.GaussianBlur(unwarped, (15,15), 0)
+    maxVal = int(beamImg.max())
+    beamImg = np.float32(beamImg/int(maxVal))
+    beamImg = beamImg * 255
+    beamImg = beamImg.astype(np.uint8)
+    return unwarped, beamImg, test
 #End CaptureExt() 
 
 def loadConfig(light_string):
@@ -176,7 +197,7 @@ def measure(light_string, cam):
 
     # Obtain Image
     #image, test = capture(data["light"], data["color"], data["exposure"])
-    image, test = CaptureExt(cam, mode, data["exposure"], config)
+    image, beamImg, test = CaptureExt(cam, mode, data["exposure"], config)
     print("received img")
     # Grab Lut Exported From Zemax 
     zemaxLut = lut.finalLut
@@ -202,15 +223,15 @@ def measure(light_string, cam):
     lux = 0
 
     # Blur The Image
-    filteredImage = cv2.GaussianBlur(image,(15,15),0)
     if test == False:
         print('test false')
-        bwImage = cv2.cvtColor(filteredImage, cv2.COLOR_BGR2GRAY)
+        bwBeamImg = cv2.cvtColor(beamImg, cv2.COLOR_BGR2GRAY)
+        bwImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         print ('converted bwImage')
     # Create a Bianary Array, Where Pixels Within The 80% Uniformity Are 1, And Those Outside Are 0.
     # Essentially This is Blob Detection
     try:
-        ret,thresh = cv2.threshold(bwImage,uniformityValue,255,0)
+        ret,thresh = cv2.threshold(bwBeamImg,uniformityValue,255,0)
         print("thresh img good")
         # Calculate The Moments of The Bianary Image
         M = cv2.moments(thresh)
@@ -230,7 +251,7 @@ def measure(light_string, cam):
         print("blob found")
         # Create an Array of Pixel Locations (x,y) For Pixels With an Intensity
         # Greater Than or Equal to uniformityValue  
-        uniformityIndex = np.where(filteredImage >= uniformityValue)
+        uniformityIndex = np.where(beamImg >= uniformityValue)
         
         # Secondary Check for Blob Presence
         if len(uniformityIndex[0]) > 0:
@@ -308,25 +329,26 @@ def measure(light_string, cam):
 
             if test == True:
                 #Convert Image to RGB
-                image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+                bwImage = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
+            rgbBeamImg = cv2.cvtColor(bwBeamImg, cv2.COLOR_GRAY2RGB)
             #Apply Custom LUT
-            image = cv2.LUT(image, zemaxLut)
+            rgbBeamImg = cv2.LUT(rgbBeamImg, zemaxLut)
 
             #Draw 80% Box
-            cv2.rectangle(image, (minVal, uniformityIndex[0][0]), (maxVal_2, uniformityIndex[0][-1]),
+            cv2.rectangle(rgbBeamImg, (minVal, uniformityIndex[0][0]), (maxVal_2, uniformityIndex[0][-1]),
                 (255, 255, 255), 2)
             # Draw Cross Section Lines For Visual Feedback
-            cv2.line(image, (cX, uniformityIndex[0][0]), (cX, uniformityIndex[0][-1]) ,(0, 0, 0), 2)
-            cv2.line(image, (minVal, cY), (maxVal_2, cY), (0, 0, 0), 2)
+            cv2.line(rgbBeamImg, (cX, uniformityIndex[0][0]), (cX, uniformityIndex[0][-1]) ,(0, 0, 0), 2)
+            cv2.line(rgbBeamImg, (minVal, cY), (maxVal_2, cY), (0, 0, 0), 2)
 
             #Draw Center of 80% Rectangle and Label
-            cv2.circle(image, (midpoint_vertical, midpoint_horizontal), 5, (0,0,0), -1)
-            cv2.putText(image, "box center", (midpoint_vertical - 25, midpoint_horizontal - 25),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 2)
+            cv2.circle(rgbBeamImg, (midpoint_vertical, midpoint_horizontal), 5, (0,0,0), -1)
+            cv2.putText(rgbBeamImg, "box center", (midpoint_vertical - 25, midpoint_horizontal - 25),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 2)
 
             # Draw Centroid of Beam and Label
-            cv2.circle(image, (cX, cY), 5, (0,0,0), -1)
-            cv2.putText(image, "centroid", (cX - 25, cY - 25),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 2)
+            cv2.circle(rgbBeamImg, (cX, cY), 5, (0,0,0), -1)
+            cv2.putText(rgbBeamImg, "centroid", (cX - 25, cY - 25),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 2)
 
             # Arrange and plot cross section data using MatPlotLib
             horiz_x = np.array(range(maxVal_2-minVal))
@@ -373,14 +395,14 @@ def measure(light_string, cam):
         pf = [False, False, False, False]
         print("blob not found")
         if test == True:
-            image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-        image = cv2.LUT(image, zemaxLut)
+            rgbBeamImg = cv2.cvtColor(beamImg, cv2.COLOR_GRAY2RGB)
+        rgbBeamImg = cv2.LUT(rgbBeamImg, zemaxLut)
         horiz = [1, 2]
         horiz[0] = np.arange(1,11)
         horiz[1] = 2 * horiz[0] + 5
         vert = horiz
         if test == True:
-                cv2.putText(image, "TEST IMAGE", (150,440), cv2.FONT_HERSHEY_SIMPLEX, 5, (0,0,0), 6)
+                cv2.putText(rgbBeamImg, "TEST IMAGE", (150,440), cv2.FONT_HERSHEY_SIMPLEX, 5, (0,0,0), 6)
         flux = lux = cY = horiz_length = vert_length = 0 
         
         time.sleep(1.5)
@@ -394,9 +416,9 @@ def measure(light_string, cam):
         time.sleep(0.5)
         arduino.reset_input_buffer()
     p = alvium
-    w = int(image.shape[1] * p)
-    h = int(image.shape[0] * p)
-    res_img = cv2.resize(image, (w,h))
+    w = int(rgbBeamImg.shape[1] * p)
+    h = int(rgbBeamImg.shape[0] * p)
+    res_img = cv2.resize(rgbBeamImg, (w,h))
     passCount = 0
     for n, _ in enumerate(pf):
         if pf[n] == True:
@@ -409,10 +431,10 @@ def measure(light_string, cam):
 #End measure()
 
 #### DEBUG MODE ####
-#with Vimba.get_instance() as vimba:
-#    cams = vimba.get_all_cameras()
-#    cams[0].set_access_mode(AccessMode.Full)
-#    with cams[0] as cam:
-#        cam.load_settings("EOLTestSettings.xml", PersistType.NoLUT)
-#        connect()
-#        measure("JWL150-MD-WHI", cam)
+with Vimba.get_instance() as vimba:
+    cams = vimba.get_all_cameras()
+    cams[0].set_access_mode(AccessMode.Full)
+    with cams[0] as cam:
+        cam.load_settings("EOLTestSettings.xml", PersistType.NoLUT)
+        connect()
+        measure("JWL150-MD-WHI", cam)
