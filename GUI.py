@@ -244,6 +244,15 @@ def main():
     print(user)
     hidden = True
     savePath = 'C:/Users/' + user + '/Documents/SmartLightAnalyzer'
+    # Check if save paths are created, create if not created
+    if not os.path.exists(savePath):
+        os.makedirs(savePath)
+    if not os.path.exists(savePath+'/Images'):
+        os.makedirs(savePath+'/Images')
+    if not os.path.exists(savePath+'/Data'):
+        os.makedirs(savePath+'/Data')
+    if not os.path.exists(savePath+'/Reports'):
+        os.makedirs(savePath+'/Reports')
     SLA.connect() # Connect to the electronics measurment tool
     ### --- Main Loop --- ###
     while True:   
@@ -316,10 +325,6 @@ def main():
                     plot_figure(1, horiz[0], horiz[1])
                     plot_figure(2, vert[0], vert[1])
                     #frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-                    if not os.path.exists(savePath):
-                        os.makedirs(savePath)
-                        os.makedirs(savePath+'/Images')
-                        os.makedirs(savePath+'/Data')
 
                     # Update Values for Report Tab
 
