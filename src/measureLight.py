@@ -175,7 +175,7 @@ def CaptureExt(cam, mode, exp, config):
 #End CaptureExt() 
 
 def loadConfig(light_string):
-    filePath = "configs/"+light_string+".json"
+    filePath = "C:/Users/SVL226/Documents/GitHub/SVL_BeamAnalysis/configs/"+light_string+".json"
     try:
         with open(filePath, 'r') as file:
             print("found config")
@@ -405,10 +405,10 @@ def measure(light_string, cam):
         time.sleep(0.5)
         arduino.reset_input_buffer()          
     else:
+        symGood = [0, 0]
         pf = [False, False, False, False]
         print("blob not found")
-        if test == True:
-            rgbBeamImg = cv2.cvtColor(beamImg, cv2.COLOR_GRAY2RGB)
+        rgbBeamImg = cv2.cvtColor(bwBeamImg, cv2.COLOR_GRAY2RGB)
         rgbBeamImg = cv2.LUT(rgbBeamImg, zemaxLut)
         horiz = [1, 2]
         horiz[0] = np.arange(1,11)
@@ -448,6 +448,6 @@ def measure(light_string, cam):
     cams = vimba.get_all_cameras()
     cams[0].set_access_mode(AccessMode.Full)
     with cams[0] as cam:
-        cam.load_settings("EOLTestSettings.xml", PersistType.NoLUT)
+        cam.load_settings("C:/Users/SVL226/Documents/GitHub/SVL_BeamAnalysis/EOLTestSettings.xml", PersistType.NoLUT)
         connect()
         measure("JWL150-MD-WHI", cam)
