@@ -8,7 +8,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import measureLight as SLA # Smart Light Analyzer
 import datetime
 import psutil
+import time
 import os
+import pyautogui
 from csv import writer
 import numpy as np
 from vimba import *
@@ -174,13 +176,13 @@ advanced_column = [
 # Define the window layout
 layout = [
     [sg.Column(image_column, expand_x=True, expand_y=True),
-    sg.Button("R\ne\np\no\nr\nt", font=["Open Sans",10,"bold"], size=(3,7), key="-HIDE-"),
-    sg.VSeperator(),
+    sg.pin(sg.Button("R\ne\np\no\nr\nt", font=["Open Sans",10,"bold"], size=(3,7), key="-HIDE-")),
+    sg.VSeperator(key="-SEP-"),
     sg.Column(advanced_column, visible=False, key="-ADVNCED-", expand_x=True, expand_y=True)]
 ]
 
 # Create the window and show it
-window = sg.Window('Smart Vision Lights Beam Analysis', layout, finalize=True, resizable=True, icon=SVLIcon)
+window = sg.Window('Smart Vision Lights - End Of Line Tester', layout, finalize=True, resizable=True, icon=SVLIcon)
 window.maximize()
 graph1 = window["Graph1"]
 graph2 = window["Graph2"]
@@ -197,6 +199,43 @@ date = datetime.datetime.now()
 month, day, year = date.month, date.day, date.year
 
 print(month, day, year)
+
+def hideButtons():
+    window["-SHWRPRT-"].update(visible=False)
+    window["-SHWGRPH-"].update(visible=False)
+    window["-HIDE-"].update(visible=False)
+    window["-LIGHT_STRING-"].update(visible=False)
+    window["-SERIAL_NUM-"].update(visible=False)
+    window["-MEASURE-"].update(visible=False)
+
+def showButtons():
+    window["-SHWRPRT-"].update(visible=True)
+    window["-SHWGRPH-"].update(visible=True)
+    window["-HIDE-"].update(visible=True)
+    window["-LIGHT_STRING-"].update(visible=True)
+    window["-SERIAL_NUM-"].update(visible=True)
+    window["-MEASURE-"].update(visible=True)
+
+def saveReport(hidden, savePath):
+    hideButtons()
+    window.Refresh()
+    if hidden == True:
+        window["-ADVNCED-"].update(visible=True)
+        window.Refresh()
+        image = pyautogui.screenshot()
+        showButtons()
+        window["-ADVNCED-"].update(visible=False)
+        window.Refresh()
+    else:
+        image = pyautogui.screenshot()
+        showButtons()
+        window["-ADVNCED-"].update(visible=False)
+        window.Refresh()
+        window["-ADVNCED-"].update(visible=True)
+        window.Refresh()
+    image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+    cv2.imshow("report", image)
+    cv2.imwrite(savePath, image)
 
 def main():
     ### --- Main Definitions --- ###
@@ -393,7 +432,8 @@ def main():
                             [sg.OK(size=(10,1), font=["",50,""],p=((15,0),(0,0)))]
                         ]
                         window["-STATUS-"].update("FAIL", text_color="red")
-
+                    pathStr = savePath + "/ReportImages/" + light_string + '_'+ serialNum + '_' + dateString + '.jpg'
+                    saveReport(hidden, pathStr)
                     choice, _ = sg.Window('Measurment Data', output, modal=False).read(close=True)
             window['-MEASURE-'].update(disabled=False)
         elif event == "-LIGHT-":
