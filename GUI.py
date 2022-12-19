@@ -120,11 +120,11 @@ report_column = [
     [sg.Text("JWL150-MD-WHI\nSVL261609", font=["Kanit",15,"bold"], size=(13, 2), justification="left", expand_x=True, key="-PNSN-"),
         sg.Text("Status:", font=["Open Sans",15,"bold"], size=(7, 1), justification="right"),
         sg.Text("FAIL", text_color="red", font=["Open Sans",20,"bold"], size=(4, 1), justification="center", relief="solid", border_width=1, key="-STATUS-")],
-    [sg.Text("Total Flux:", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x=True),
+    [sg.Text("Total Flux:", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x=True, key="-TINTENSITY-"),
         sg.Text("99999999", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-FLXMZRD-"),
         sg.Text("99999999±999", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-FLXHL-"),
         sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-FLXPF-")],
-    [sg.Text("Center Lux:", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x= True),
+    [sg.Text("Center Lux:", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x= True, key="-CINTENSITY-"),
         sg.Text("Lux", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-LXMZRD-"),
         sg.Text("999999±999", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-LXHL-"),
         sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-LXPF-")],
@@ -240,6 +240,12 @@ def main():
                 mode = splitString[1]
                 color = splitString[2]
                 invalConfig = False
+                if color == "WHI":
+                    window["-TINTENSITY-"].update("Total Lux:")
+                    window["-CINTENSITY-"].update("Center Lux:")
+                else:
+                    window["-TINTENSITY-"].update("Total Intensity:")
+                    window["-CINTENSITY-"].update("Center Intensity:")
             except IndexError:
                 sg.popup('        Error: Invalid Configuration\n Please Re-Enter Light P/N and S/N.', title="Error: InvalConfgErr", modal=True, icon=SVLIcon, font=["Open Sans",20,'bold'])
                 print("lightgistics")
