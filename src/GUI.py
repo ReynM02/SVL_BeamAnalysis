@@ -243,7 +243,8 @@ def main():
     user = user_list[0].name # Gets name of current user
     print(user)
     hidden = True
-    savePath = 'C:/Users/' + user + '/Documents/SmartLightAnalyzer'
+    savePath = 'C:/Users/' + user + '/Documents/EOLTester'
+    SLA.documentPath = 'C:/Users/' + user + 'Documents/EOLTester/src'
     # Check if save paths are created, create if not created
     if not os.path.exists(savePath):
         os.makedirs(savePath)

@@ -16,6 +16,8 @@ alvium = 0.75  # 2
 arduino = serial.Serial()
 arduino.baudrate = 19200
 
+documentPath = ""
+
 def connect():
     readyString = ""
     ports, pnum = fp.run()
