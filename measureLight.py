@@ -115,8 +115,7 @@ def flatFieldCorrection(rawImg):
 
     fdImg = flatImg-darkImg
     m = np.average(fdImg)
-    gain = m/fdImg
-
+    
     correctedImg = ((rawImg - darkImg) * m) / fdImg
 
     return correctedImg
@@ -226,7 +225,19 @@ def measure(light_string, cam):
     if test == False:
         print('test false')
         bwBeamImg = cv2.cvtColor(beamImg, cv2.COLOR_BGR2GRAY)
-        bwImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        lightColor = data["color"]
+        if lightColor == "WHI":
+            bwImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        else:
+            b, g, r = cv2.split(image)
+            if lightColor == "470":
+                bwImage = b
+            elif lightColor == "530":
+                bwImage = g
+            elif lightColor == "625":
+                bwImage = r
+            else:
+                bwImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         print ('converted bwImage')
     # Create a Bianary Array, Where Pixels Within The 80% Uniformity Are 1, And Those Outside Are 0.
     # Essentially This is Blob Detection
@@ -431,7 +442,7 @@ def measure(light_string, cam):
 #End measure()
 
 #### DEBUG MODE ####
-with Vimba.get_instance() as vimba:
+#with Vimba.get_instance() as vimba:
     cams = vimba.get_all_cameras()
     cams[0].set_access_mode(AccessMode.Full)
     with cams[0] as cam:
