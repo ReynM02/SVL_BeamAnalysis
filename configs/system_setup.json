@@ -7,11 +7,11 @@
             ],
     "dst": [
                 [130, 99],
-                [1352, 99],
-                [130, 910],
-                [1352, 910]
+                [1345, 99],
+                [130, 1112],
+                [1345, 1112]
             ],
-    "ppm_calibration": 10,
+    "ppm_calibration": 1.96,
     "lux_calibration": 1000,
     "center_lux_size": 10
 }
