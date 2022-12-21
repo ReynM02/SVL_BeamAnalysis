@@ -118,7 +118,7 @@ def flatFieldCorrection(rawImg):
     fdImg = flatImg-darkImg
     m = np.average(fdImg)
     
-    correctedImg = ((rawImg - darkImg) * m) / fdImg
+    correctedImg = np.asarray(( ( rawImg - darkImg ) * m ) / (flatImg - darkImg), dtype=np.uint8)
 
     return correctedImg
 
@@ -161,6 +161,7 @@ def CaptureExt(cam, mode, exp, config):
         arduino.write(bytes("K", 'utf-8'))
     test = False
     image = image - bgimage
+    image = flatFieldCorrection(image)
     print("bg sub done")
     src = np.float32(config["src"])
     dst = np.float32(config["dst"])
