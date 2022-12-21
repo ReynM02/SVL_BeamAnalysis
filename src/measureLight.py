@@ -378,7 +378,7 @@ def measure(light_string, cam):
             vert = [vert_x, vert_y]
 
             # - Pass/Fail data
-            pf = [False, False, False, False]
+            pf = [False, False, False, False, False, False, False, False, False]
             # -- Flux
             if flux > intensityLow and flux < intensityHigh:
                 # Flux Passed
@@ -398,12 +398,38 @@ def measure(light_string, cam):
                 # X Passed
                 pf[3] = True 
 
+        # Current High Low
+        c0Hi = data["npn_current_good"] + data["npn_current_tolerance"]
+        c0Lo = data["npn_current_good"] - data["npn_current_tolerance"]
+        
+        c1Hi = data["pnp_high_current_good"] + data["pnp_high_current_tolerance"]
+        c1Lo = data["pnp_high_current_good"] - data["pnp_high_current_tolerance"]
+
+        c2Hi = data["pnp_low_current_good"] + data["pnp_low_current_tolerance"]
+        c2Lo = data["pnp_low_current_good"] - data["pnp_low_current_tolerance"]
+
+        c3Hi = data["od_peak_current_good"] + data["od_peak_current_tolerance"]
+        c3Lo = data["od_peak_current_good"] - data["od_peak_current_tolerance"]
+
+        c4Hi = data["od_peak_current_good"] + data["od_peak_current_tolerance"]
+        c4Lo = data["od_peak_current_good"] - data["od_peak_current_tolerance"]
+
         symGood = [cX-midpoint_horizontal, cY-midpoint_vertical]
         time.sleep(1.5)
         currentData = arduino.read_until(b'}')
         currentData = currentData.decode("UTF-8")
         current = currentData[:-1]
-        currentlist = current.split(",")        
+        currentlist = current.split(",")
+        if currentlist[0] > c0Lo and currentlist[0] < c0Hi:
+            pf[4] = True
+        if currentlist[1] > c1Lo and currentlist[1] < c1Hi:
+            pf[5] = True
+        if currentlist[2] > c2Lo and currentlist[2] < c2Hi:
+            pf[6] = True
+        if currentlist[3] > c3Lo and currentlist[3] < c3Hi:
+            pf[7] = True
+        if currentlist[4] > c4Lo and currentlist[4] < c4Hi:
+            pf[8] = True
         print(currentlist)
         results = [flux, finalLux, cY, cX, horiz_length, vert_length]
         results.extend(currentlist)
@@ -411,7 +437,7 @@ def measure(light_string, cam):
         arduino.reset_input_buffer()          
     else:
         symGood = [0, 0]
-        pf = [False, False, False, False]
+        pf = [False, False, False, False, False, False, False, False, False]
         print("blob not found")
         rgbBeamImg = cv2.cvtColor(bwBeamImg, cv2.COLOR_GRAY2RGB)
         rgbBeamImg = cv2.LUT(rgbBeamImg, zemaxLut)

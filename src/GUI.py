@@ -385,7 +385,7 @@ def main():
                     # - SYMMETRY OPERATIONS
                     symMZRDStr = "("+str(cX)+","+str(cY)+")"
                     window["-SYMMZRD-"].update(symMZRDStr)
-                    if pf[1] == True:
+                    if pf[2] == True:
                         window["-SYMPF-"].update("PASS", text_color='green')
                     else:
                         window["-SYMPF-"].update("FAIL", text_color='red')
@@ -395,7 +395,7 @@ def main():
                     # - BEAM-SIZE OPERATIONS
                     szMZRDStr = "("+str(xLen)+","+str(yLen)+")"
                     window["-SZMZRD-"].update(szMZRDStr)
-                    if pf[2] == True:
+                    if pf[3] == True:
                         window["-SZPF-"].update("PASS", text_color='green')
                     else:
                         window["-SZPF-"].update("FAIL", text_color='red')
@@ -418,7 +418,7 @@ def main():
                     window["-AHIHL-"].update(ahiHLStr)
                     alowHLStr = str(data["analog_low_current_good"]) + "±" + str(data["analog_low_current_tolerance"])
                     window["-ALOHL-"].update(alowHLStr)
-                    # Pass/Fail messages
+                    # Measured updates
                     window["-PCRNTMZRD-"].update(npnCurrent)    # peak current from cont. mode
                     window["-PCRNTOMZRD-"].update(odStrobe)     # peak current from OD mode
                     window["-NPNCRNTMZRD-"].update(npnCurrent)  # peak current when triggered with NPN line
@@ -426,6 +426,29 @@ def main():
                     window["-PNPLOMZRD-"].update(pnpCurrent5v)  # peak current when triggered with 5v on PNP line
                     window["-AHIMZRD-"].update(npnCurrent)      # peak current when triggered with analog at 10v
                     window["-ALOMZRD-"].update(pnpCurrent5v)    # peak current when triggered with analog at 5v
+                    # Pass/Fail
+                    if pf[4] == True:
+                        window["-NPNCRNTPF-"].update("PASS", text_color='green')
+                        window["-PCRNTPF-"].update("PASS", text_color='green')
+                        window["-AHIPF-"].update("PASS", text_color='green')
+                    else:
+                        window["-NPNCRNTPF-"].update("FAIL", text_color='red')
+                        window["-PCRNTPF-"].update("FAIL", text_color='red')
+                        window["-AHIPF-"].update("FAIL", text_color='red')
+                    if pf[5] == True:
+                        window["-PNPHIPF-"].update("PASS", text_color='green')
+                    else:
+                        window["-PNPHIPF-"].update("FAIL", text_color='red')
+                    if pf[6] == True:
+                        window["-PNPLOPF-"].update("PASS", text_color='green')
+                        window["-ALOPF-"].update("PASS", text_color='green')
+                    else:
+                        window["-PNPLOPF-"].update("FAIL", text_color='red')
+                        window["-ALOPF-"].update("FAIL", text_color='red')
+                    if pf[7] == True:
+                        window["-PCRNTOPF-"].update("PASS", text_color='green')
+                    else:
+                        window["-PCRNTOPF-"].update("FAIL", text_color='red')
                     
                     if passFail:
                         output = [
