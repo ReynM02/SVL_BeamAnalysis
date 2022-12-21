@@ -176,7 +176,7 @@ def CaptureExt(cam, mode, exp, config):
 #End CaptureExt() 
 
 def loadConfig(light_string):
-    filePath = documentPath + "/configs/" + light_string + ".json"
+    filePath = "C:/Users/SVL226/Documents/GitHub/SVL_BeamAnalysis/configs/"+light_string+".json"
     try:
         with open(filePath, 'r') as file:
             print("found config")
@@ -450,11 +450,9 @@ def measure(light_string, cam):
 
 #### DEBUG MODE ####
 #with Vimba.get_instance() as vimba:
-#    cams = vimba.get_all_cameras()
-#    cams[0].set_access_mode(AccessMode.Full)
-#    with cams[0] as cam:
-#        documentPath = "C:/Users/SVL226/Documents/EOLTester"
-#        path = documentPath + "/src/EOLTestSettings.xml"
-#        cam.load_settings(path, PersistType.NoLUT)
-#        connect()
-#        measure("JWL150-MD-WHI", cam)
+    cams = vimba.get_all_cameras()
+    cams[0].set_access_mode(AccessMode.Full)
+    with cams[0] as cam:
+        cam.load_settings("C:/Users/SVL226/Documents/GitHub/SVL_BeamAnalysis/EOLTestSettings.xml", PersistType.NoLUT)
+        connect()
+        measure("JWL150-MD-WHI", cam)

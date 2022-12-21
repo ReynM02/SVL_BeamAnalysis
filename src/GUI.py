@@ -234,12 +234,8 @@ def saveReport(hidden, savePath):
         window["-ADVNCED-"].update(visible=True)
         window.Refresh()
     image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-    #cv2.imshow("report", image)
-    print("saving report")
-    written = cv2.imwrite("C:/Users/SVL226/Documents/EOLTester/Reports/Image.jpg", image)
-    written = cv2.imwrite(savePath+".jpg", image)
-    if written:
-        print("image saved")
+    cv2.imshow("report", image)
+    cv2.imwrite(savePath, image)
 
 def main():
     ### --- Main Definitions --- ###
@@ -248,7 +244,7 @@ def main():
     print(user)
     hidden = True
     savePath = 'C:/Users/' + user + '/Documents/EOLTester'
-    SLA.documentPath = savePath
+    SLA.documentPath = 'C:/Users/' + user + 'Documents/EOLTester/src'
     # Check if save paths are created, create if not created
     if not os.path.exists(savePath):
         os.makedirs(savePath)
@@ -320,7 +316,6 @@ def main():
                     data = SLA.loadConfig(light_string)
                     didntRun = False
                 except:
-                    frame, horiz, vert, results, symGood, pf, passFail = SLA.measure(light_string, cam)
                     print("failed")
                     passFail = False
                     didntRun = True
@@ -443,8 +438,7 @@ def main():
                             [sg.OK(size=(10,1), font=["",50,""],p=((15,0),(0,0)))]
                         ]
                         window["-STATUS-"].update("FAIL", text_color="red")
-                    pathStr = str(savePath + "/Reports/" + light_string + '_'+ serialNum + '_' + dateString)
-                    print(pathStr)
+                    pathStr = savePath + "/ReportImages/" + light_string + '_'+ serialNum + '_' + dateString + '.jpg'
                     saveReport(hidden, pathStr)
                     choice, _ = sg.Window('Measurment Data', output, modal=False).read(close=True)
             window['-MEASURE-'].update(disabled=False)
