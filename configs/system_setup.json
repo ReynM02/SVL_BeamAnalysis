@@ -11,6 +11,7 @@
                 [130, 910],
                 [1352, 910]
             ],
-    "ppm_conversion": 10,
-    "lux_conversion": 10
+    "ppm_calibration": 10,
+    "lux_calibration": 10,
+    "center_lux_size": 10
 }

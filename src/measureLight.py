@@ -275,8 +275,8 @@ def measure(light_string, cam):
             midpoint_vertical = int((maxVal_2 + minVal) / 2)
             midpoint_horizontal = int((uniformityIndex[0][-1] + uniformityIndex[0][0]) / 2)
 
-            luxHorizontal = np.arange(midpoint_horizontal-10, midpoint_horizontal+10)
-            luxvertical = [midpoint_vertical-10, midpoint_vertical+10]
+            luxHorizontal = np.arange(midpoint_horizontal-int(config["center_lux_size"]), midpoint_horizontal+int(config["center_lux_size"]))
+            luxvertical = [midpoint_vertical-int(config["center_lux_size"]), midpoint_vertical+int(config["center_lux_size"])]
             luxBox = luxHorizontal
             while luxvertical[0]+1 < luxvertical[1]:
                 luxBox = np.vstack((luxBox, luxHorizontal))
@@ -312,6 +312,10 @@ def measure(light_string, cam):
                     lux = lux + bwImage[row-1][col-1]
                     col = col+1
                 luxRow = luxRow+1
+
+            nonbiasLux = int(lux / int(data["exposure"]))
+
+            finalLux = nonbiasLux * int(config["lux_calibration"])
 
             # Define x and y start/end values for cross section profiles
             y_start = uniformityIndex[0][0]
@@ -381,7 +385,7 @@ def measure(light_string, cam):
                 pf[0] = True
 
             # -- LUX
-            if lux > luxLow and lux < luxHigh:
+            if finalLux > luxLow and finalLux < luxHigh:
                 pf[1] = True
 
             # -- Symmetry
@@ -401,7 +405,7 @@ def measure(light_string, cam):
         current = currentData[:-1]
         currentlist = current.split(",")        
         print(currentlist)
-        results = [flux, lux, cY, cX, horiz_length, vert_length]
+        results = [flux, finalLux, cY, cX, horiz_length, vert_length]
         results.extend(currentlist)
         time.sleep(0.5)
         arduino.reset_input_buffer()          
@@ -417,7 +421,7 @@ def measure(light_string, cam):
         vert = horiz
         if test == True:
                 cv2.putText(rgbBeamImg, "TEST IMAGE", (150,440), cv2.FONT_HERSHEY_SIMPLEX, 5, (0,0,0), 6)
-        flux = lux = cY = horiz_length = vert_length = 0 
+        flux = finalLux = cY = cX = horiz_length = vert_length = 0 
         
         time.sleep(1.5)
         currentData = arduino.read_until(b'}')
@@ -425,7 +429,7 @@ def measure(light_string, cam):
         current = currentData[:-1]
         currentlist = current.split(",")        
         print(currentlist)
-        results = [flux, lux, cY, cX, horiz_length, vert_length]
+        results = [flux, finalLux, cY, cX, horiz_length, vert_length]
         results.extend(currentlist)
         time.sleep(0.5)
         arduino.reset_input_buffer()
