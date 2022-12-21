@@ -50,7 +50,13 @@ def flatFieldCorrection(rawImg):
 
     correctedImg = arg1 / arr2
     
-    correctedImg = ( ( rawImg - darkImg ) * m ) / (flatImg - darkImg)
+    print(type(darkImg))
+    print(type(rawImg))
+    print(type(flatImg))
+
+    correctedImg = np.asarray(( ( rawImg - darkImg ) * m ) / (flatImg - darkImg), dtype=np.uint8)
+
+    print(type(correctedImg))
 
     cv2.imshow("flat-dark", arr2)
     cv2.imshow("flat", flatImg)

@@ -166,7 +166,7 @@ def CaptureExt(cam, mode, exp, config):
     dst = np.float32(config["dst"])
     unwarped = unwarpImg(image, src, dst)
     print("unwarped image")
-    beamImg = cv2.GaussianBlur(unwarped, (15,15), 0)
+    beamImg = unwarped #cv2.GaussianBlur(unwarped, (15,15), 0)
     maxVal = int(beamImg.max())
     beamImg = np.float32(beamImg/int(maxVal))
     beamImg = beamImg * 255
