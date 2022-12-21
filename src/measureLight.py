@@ -324,8 +324,8 @@ def measure(light_string, cam):
             x_end = maxVal_2
 
             # Define length of horizontal and vertical cross section array
-            horiz_length = maxVal_2-minVal
-            vert_length = uniformityIndex[0][-1]-uniformityIndex[0][0]
+            horiz_length = int((maxVal_2-minVal) / config["ppm_calibration"])
+            vert_length = int((uniformityIndex[0][-1]-uniformityIndex[0][0]) / config["ppm_calibration"]) 
             horizontal_profile = np.arange(horiz_length)
             vertical_profile = np.arange(vert_length)
 
