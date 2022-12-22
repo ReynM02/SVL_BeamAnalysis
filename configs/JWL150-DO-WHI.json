@@ -4,7 +4,7 @@
     "color": "WHI",
     "mode": "D",
     "lens": "14Deg",
-    "exposure": 184,
+    "exposure": 10,
     "flux_good": 6.026e7,
     "flux_tolerance": 1.035e5,
     "lux_good": 100e3,
