@@ -460,10 +460,11 @@ def measure(light_string, cam):
         time.sleep(0.5)
         arduino.reset_input_buffer()          
     else:
+        global documentPath
         symGood = [0, 0]
         pf = [False, False, False, False, False, False, False, False, False]
         print("blob not found")
-        backupimg = "C:/Users/matt.reynolds/Documents/EOLTester/src/SVLLogoPNG.png"
+        backupimg = documentPath + "/src/SVLLogoPNG.png"
         image = cv2.imread(backupimg)
         print("image read")
         try:
