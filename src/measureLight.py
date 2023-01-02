@@ -177,7 +177,7 @@ def CaptureExt(cam, mode, exp, config):
         image = image - bgimage
     except:
         return None, None, True
-    image = flatFieldCorrection(image)
+    #image = flatFieldCorrection(image)
     print("bg sub done")
     src = np.float32(config["src"])
     dst = np.float32(config["dst"])
@@ -342,16 +342,19 @@ def measure(light_string, cam):
             # Define length of horizontal and vertical cross section array
             horiz_length = int((maxVal_2-minVal) / config["ppm_calibration"])
             vert_length = int((uniformityIndex[0][-1]-uniformityIndex[0][0]) / config["ppm_calibration"]) 
-            horizontal_profile = np.arange(horiz_length)
-            vertical_profile = np.arange(vert_length)
+            horizontal_profile = np.arange(maxVal_2-minVal)
+            vertical_profile = np.arange(uniformityIndex[0][-1]-uniformityIndex[0][0])
 
             # Copy data from image into Horizontal Profile
             x = 0
             if x_end != 0:
-                while x_end >= x_start:
-                    horizontal_profile[x-1] = bwImage[cY][x_end-1]
-                    x_end = x_end - 1
+                while x_end > x_start:
+                    print(x_end)
                     x=x+1
+                    print(x-1)
+                    horizontal_profile[(x-1)] = bwImage[cY][x_end-1]
+                    x_end = x_end - 1
+
 
             # Copy data from image into Vertical Profile
             x = 0
@@ -436,15 +439,15 @@ def measure(light_string, cam):
         currentData = currentData.decode("UTF-8")
         current = currentData[:-1]
         currentlist = current.split(",")
-        if currentlist[0] > c0Lo and currentlist[0] < c0Hi:
+        if int(currentlist[0]) > c0Lo and int(currentlist[0]) < c0Hi:
             pf[4] = True
-        if currentlist[1] > c1Lo and currentlist[1] < c1Hi:
+        if int(currentlist[1]) > c1Lo and int(currentlist[1]) < c1Hi:
             pf[5] = True
-        if currentlist[2] > c2Lo and currentlist[2] < c2Hi:
+        if int(currentlist[2]) > c2Lo and int(currentlist[2]) < c2Hi:
             pf[6] = True
-        if currentlist[3] > c3Lo and currentlist[3] < c3Hi:
+        if int(currentlist[3]) > c3Lo and int(currentlist[3]) < c3Hi:
             pf[7] = True
-        if currentlist[4] > c4Lo and currentlist[4] < c4Hi:
+        if int(currentlist[4]) > c4Lo and int(currentlist[4]) < c4Hi:
             pf[8] = True
         print(currentlist)
         results = [flux, finalLux, cY, cX, horiz_length, vert_length]
@@ -510,8 +513,8 @@ def measure(light_string, cam):
     cams = vimba.get_all_cameras()
     cams[0].set_access_mode(AccessMode.Full)
     with cams[0] as cam:
-        documentPath = "C:/Users/matt.reynolds/Documents/EOLTester"
+        documentPath = "C:/Users/SVL226/Documents/EOLTester"
         path = documentPath + "/src/EOLTestSettings.xml"
-        #cam.load_settings(path, PersistType.NoLUT)
+        cam.load_settings(path, PersistType.NoLUT)
         connect()
         measure("JWL150-MD-WHI", cam)

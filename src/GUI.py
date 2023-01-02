@@ -244,7 +244,7 @@ def main():
     print(user)
     hidden = True
     savePath = 'C:/Users/' + user + '/Documents/EOLTester'
-    SLA.documentPath = 'C:/Users/' + user + 'Documents/EOLTester/src'
+    SLA.documentPath = 'C:/Users/' + user + 'Documents/EOLTester'
     # Check if save paths are created, create if not created
     if not os.path.exists(savePath):
         os.makedirs(savePath)
@@ -492,5 +492,5 @@ with Vimba.get_instance() as vimba:
     cams = vimba.get_all_cameras()
     cams[0].set_access_mode(AccessMode.Full)
     with cams[0] as cam:
-        #cam.load_settings("EOLTestSettings.xml", PersistType.NoLUT)
+        cam.load_settings(savePath+"/src/EOLTestSettings.xml", PersistType.NoLUT)
         main()
