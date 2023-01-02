@@ -244,7 +244,7 @@ def main():
     print(user)
     hidden = True
     savePath = 'C:/Users/' + user + '/Documents/EOLTester'
-    SLA.documentPath = 'C:/Users/' + user + 'Documents/EOLTester'
+    SLA.documentPath = 'C:/Users/' + user + '/Documents/EOLTester'
     # Check if save paths are created, create if not created
     if not os.path.exists(savePath):
         os.makedirs(savePath)
@@ -316,7 +316,7 @@ def main():
                     data = SLA.loadConfig(light_string)
                     didntRun = False
                 except:
-                    print("failed")
+                    print(frame)
                     passFail = False
                     didntRun = True
 
@@ -492,5 +492,9 @@ with Vimba.get_instance() as vimba:
     cams = vimba.get_all_cameras()
     cams[0].set_access_mode(AccessMode.Full)
     with cams[0] as cam:
-        cam.load_settings(savePath+"/src/EOLTestSettings.xml", PersistType.NoLUT)
+        user_list = psutil.users() # Gets all connected users
+        user = user_list[0].name # Gets name of current user
+        savePath = 'C:/Users/' + user + '/Documents/EOLTester'
+        SLA.documentPath = 'C:/Users/' + user + 'Documents/EOLTester'
+        cam.load_settings(savePath +"/src/EOLTestSettings.xml", PersistType.NoLUT)
         main()
