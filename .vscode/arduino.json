@@ -1,7 +1,6 @@
 {
-    "configuration": "cpu=atmega328",
-    "board": "arduino:avr:nano",
+    "board": "arduino:avr:uno",
     "sketch": "src\\ArduinoCode\\SLAElectronicsTests.ino",
-    "port": "COM15",
+    "port": "COM9",
     "programmer": "arduino:arduinoisp"
 }

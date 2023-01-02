@@ -171,8 +171,11 @@ def CaptureExt(cam, mode, exp, config):
             arduino.write(bytes("K", 'utf-8'))
         test = False
     except:
+        hs = None
+        while hs != b'S':
+            hs = arduino.read(1)
         arduino.write(bytes("K", 'utf-8'))
-        arduino.write(bytes("K", 'utf-8'))  
+        #arduino.write(bytes("K", 'utf-8'))  
     try:
         image = image - bgimage
     except:
@@ -198,12 +201,14 @@ def loadConfig(light_string):
             print("found config")
             data = json.load(file)
     except FileNotFoundError:
+        print("No File")
         return 1
 
     return data
 #End loadConfig()
 
 def measure(light_string, cam):
+    print("in measure")
     # Load Config for Light
     data = loadConfig(light_string)
     config = loadConfig("system_setup")
@@ -458,7 +463,9 @@ def measure(light_string, cam):
         symGood = [0, 0]
         pf = [False, False, False, False, False, False, False, False, False]
         print("blob not found")
-        image = cv2.imread("C:/Users/matt.reynolds/OneDrive - Smart Vision Lights/Desktop/SVL_BeamAnalysis/src/SVLLogoPNG.png")
+        backupimg = "C:/Users/matt.reynolds/Documents/EOLTester/src/SVLLogoPNG.png"
+        image = cv2.imread(backupimg)
+        print("image read")
         try:
             rgbBeamImg = cv2.cvtColor(bwBeamImg, cv2.COLOR_GRAY2RGB)
             rgbBeamImg = cv2.LUT(rgbBeamImg, zemaxLut)
@@ -481,9 +488,12 @@ def measure(light_string, cam):
         results.extend(currentlist)
         time.sleep(0.5)
         arduino.reset_input_buffer()
-    p = alvium
-    w = int(rgbBeamImg.shape[1] * p)
-    h = int(rgbBeamImg.shape[0] * p)
+    try:
+        p = alvium
+        w = int(rgbBeamImg.shape[1] * p)
+        h = int(rgbBeamImg.shape[0] * p)
+    except:
+        p = w = h = 0
     if test == False:
         res_img = cv2.resize(rgbBeamImg, (w,h))
         passCount = 0
@@ -513,7 +523,7 @@ def measure(light_string, cam):
     cams = vimba.get_all_cameras()
     cams[0].set_access_mode(AccessMode.Full)
     with cams[0] as cam:
-        documentPath = "C:/Users/SVL226/Documents/EOLTester"
+        documentPath = "C:/Users/matt.reynolds/Documents/EOLTester"
         path = documentPath + "/src/EOLTestSettings.xml"
         cam.load_settings(path, PersistType.NoLUT)
         connect()
