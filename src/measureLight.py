@@ -126,41 +126,57 @@ def CaptureExt(cam, mode, exp, config):
     print("in CaptureExt()")
     print('cam[0] found')
     expTime = cam.ExposureTime
+    print('exp calc')
     expTime.set(exp)
+    print("exp set")
     msg = str(mode) + str(exp)
+    print("msg created")
     msgbyte = bytes(msg, 'utf-8')
+    print(msgbyte)
+    print("msg converted to byte")
     arduino.write(msgbyte)
-    hs = arduino.read(1)
-    while hs != b'S':
-        hs = arduino.read(1)
+    print("msg sent to arduino")
+    hs = None
+    print("read duino")
     try:
-        bgframe = cam.get_frame(timeout_ms=5000)
-        print("got bgframe")
-        bgframe.convert_pixel_format(PixelFormat.Bgr8)
-        print("converted frame")
-        bgimage = bgframe.as_opencv_image()
-        print("saved as bgimage")
-        arduino.write(bytes("K", 'utf-8'))
-    except:
-        print("timeout")
-        arduino.write(bytes("K", 'utf-8'))
+        while hs != b'S':
+            print("in loop")
+            hs = arduino.read(1)
+        try:
+            bgframe = cam.get_frame(timeout_ms=int(exp+100))
+            print("got bgframe")
+            bgframe.convert_pixel_format(PixelFormat.Bgr8)
+            print("converted frame")
+            bgimage = bgframe.as_opencv_image()
+            print("saved as bgimage")
+            arduino.write(bytes("K", 'utf-8'))
+        except:
+            print("timeout")
+            arduino.write(bytes("K", 'utf-8'))
+            raise Exception("NoPic")
 
-    hs2 = arduino.read(1)
-    while hs2 != b'S':
-        hs2 = arduino.read(1)
-    try:
-        frame = cam.get_frame(timeout_ms=5000)
-        print("got frame")
-        frame.convert_pixel_format(PixelFormat.Bgr8)
-        print("converted frame")
-        image = frame.as_opencv_image()
-        print("image saved as image")
-        arduino.write(bytes("K", 'utf-8'))
+        hs = None
+        while hs != b'S':
+            hs = arduino.read(1)
+        try:
+            frame = cam.get_frame(timeout_ms=5000)
+            print("got frame")
+            frame.convert_pixel_format(PixelFormat.Bgr8)
+            print("converted frame")
+            image = frame.as_opencv_image()
+            print("image saved as image")
+            arduino.write(bytes("K", 'utf-8'))
+        except:
+            print("timeout2 - continue anyway")
+            arduino.write(bytes("K", 'utf-8'))
+        test = False
     except:
-        print("timeout2 - continue anyway")
         arduino.write(bytes("K", 'utf-8'))
-    test = False
-    image = image - bgimage
+        arduino.write(bytes("K", 'utf-8'))  
+    try:
+        image = image - bgimage
+    except:
+        return None, None, True
     image = flatFieldCorrection(image)
     print("bg sub done")
     src = np.float32(config["src"])
@@ -176,7 +192,7 @@ def CaptureExt(cam, mode, exp, config):
 #End CaptureExt() 
 
 def loadConfig(light_string):
-    filePath = "C:/Users/SVL226/Documents/GitHub/SVL_BeamAnalysis/configs/"+light_string+".json"
+    filePath = documentPath + "/configs/" + light_string + ".json"
     try:
         with open(filePath, 'r') as file:
             print("found config")
@@ -378,7 +394,7 @@ def measure(light_string, cam):
             vert = [vert_x, vert_y]
 
             # - Pass/Fail data
-            pf = [False, False, False, False]
+            pf = [False, False, False, False, False, False, False, False, False]
             # -- Flux
             if flux > intensityLow and flux < intensityHigh:
                 # Flux Passed
@@ -398,12 +414,38 @@ def measure(light_string, cam):
                 # X Passed
                 pf[3] = True 
 
+        # Current High Low
+        c0Hi = data["npn_current_good"] + data["npn_current_tolerance"]
+        c0Lo = data["npn_current_good"] - data["npn_current_tolerance"]
+        
+        c1Hi = data["pnp_high_current_good"] + data["pnp_high_current_tolerance"]
+        c1Lo = data["pnp_high_current_good"] - data["pnp_high_current_tolerance"]
+
+        c2Hi = data["pnp_low_current_good"] + data["pnp_low_current_tolerance"]
+        c2Lo = data["pnp_low_current_good"] - data["pnp_low_current_tolerance"]
+
+        c3Hi = data["od_peak_current_good"] + data["od_peak_current_tolerance"]
+        c3Lo = data["od_peak_current_good"] - data["od_peak_current_tolerance"]
+
+        c4Hi = data["od_peak_current_good"] + data["od_peak_current_tolerance"]
+        c4Lo = data["od_peak_current_good"] - data["od_peak_current_tolerance"]
+
         symGood = [cX-midpoint_horizontal, cY-midpoint_vertical]
         time.sleep(1.5)
         currentData = arduino.read_until(b'}')
         currentData = currentData.decode("UTF-8")
         current = currentData[:-1]
-        currentlist = current.split(",")        
+        currentlist = current.split(",")
+        if currentlist[0] > c0Lo and currentlist[0] < c0Hi:
+            pf[4] = True
+        if currentlist[1] > c1Lo and currentlist[1] < c1Hi:
+            pf[5] = True
+        if currentlist[2] > c2Lo and currentlist[2] < c2Hi:
+            pf[6] = True
+        if currentlist[3] > c3Lo and currentlist[3] < c3Hi:
+            pf[7] = True
+        if currentlist[4] > c4Lo and currentlist[4] < c4Hi:
+            pf[8] = True
         print(currentlist)
         results = [flux, finalLux, cY, cX, horiz_length, vert_length]
         results.extend(currentlist)
@@ -411,19 +453,22 @@ def measure(light_string, cam):
         arduino.reset_input_buffer()          
     else:
         symGood = [0, 0]
-        pf = [False, False, False, False]
+        pf = [False, False, False, False, False, False, False, False, False]
         print("blob not found")
-        rgbBeamImg = cv2.cvtColor(bwBeamImg, cv2.COLOR_GRAY2RGB)
-        rgbBeamImg = cv2.LUT(rgbBeamImg, zemaxLut)
+        image = cv2.imread("C:/Users/matt.reynolds/OneDrive - Smart Vision Lights/Desktop/SVL_BeamAnalysis/src/SVLLogoPNG.png")
+        try:
+            rgbBeamImg = cv2.cvtColor(bwBeamImg, cv2.COLOR_GRAY2RGB)
+            rgbBeamImg = cv2.LUT(rgbBeamImg, zemaxLut)
+        except:
+            rgbBeamImg = image
         horiz = [1, 2]
         horiz[0] = np.arange(1,11)
         horiz[1] = 2 * horiz[0] + 5
         vert = horiz
-        if test == True:
-                cv2.putText(rgbBeamImg, "TEST IMAGE", (150,440), cv2.FONT_HERSHEY_SIMPLEX, 5, (0,0,0), 6)
+        #if test == True:
+                #cv2.putText(rgbBeamImg, "TEST IMAGE", (150,440), cv2.FONT_HERSHEY_SIMPLEX, 5, (0,0,0), 6)
         flux = finalLux = cY = cX = horiz_length = vert_length = 0 
-        
-        time.sleep(1.5)
+        #time.sleep(1.5)
         currentData = arduino.read_until(b'}')
         currentData = currentData.decode("UTF-8")
         current = currentData[:-1]
@@ -436,16 +481,28 @@ def measure(light_string, cam):
     p = alvium
     w = int(rgbBeamImg.shape[1] * p)
     h = int(rgbBeamImg.shape[0] * p)
-    res_img = cv2.resize(rgbBeamImg, (w,h))
-    passCount = 0
-    for n, _ in enumerate(pf):
-        if pf[n] == True:
-            passCount += 1
-    if passCount == 4:
-        passFail = True
+    if test == False:
+        res_img = cv2.resize(rgbBeamImg, (w,h))
+        passCount = 0
+        for n, _ in enumerate(pf):
+            if pf[n] == True:
+                passCount += 1
+        if passCount == 4:
+            passFail = True
+        else:
+            passFail = False
     else:
-        passFail = False
-    return res_img, horiz, vert, results, symGood, pf, passFail 
+        res_img = rgbBeamImg
+        passCount = 0
+        for n, _ in enumerate(pf):
+            if pf[n] == True:
+                passCount += 1
+        if passCount == 4:
+            passFail = True
+        else:
+            passFail = False
+        symGood = None
+    return res_img, horiz, vert, results, symGood, pf, passFail
 #End measure()
 
 #### DEBUG MODE ####
@@ -453,6 +510,8 @@ def measure(light_string, cam):
     cams = vimba.get_all_cameras()
     cams[0].set_access_mode(AccessMode.Full)
     with cams[0] as cam:
-        cam.load_settings("C:/Users/SVL226/Documents/GitHub/SVL_BeamAnalysis/EOLTestSettings.xml", PersistType.NoLUT)
+        documentPath = "C:/Users/matt.reynolds/Documents/EOLTester"
+        path = documentPath + "/src/EOLTestSettings.xml"
+        #cam.load_settings(path, PersistType.NoLUT)
         connect()
         measure("JWL150-MD-WHI", cam)
