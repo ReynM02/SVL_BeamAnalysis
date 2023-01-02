@@ -320,13 +320,15 @@ def main():
                     data = SLA.loadConfig(light_string)
                     didntRun = False
                 except:
-                    frame, horiz, vert, results, symGood, pf, passFail = SLA.measure(light_string, cam)
                     print("failed")
                     passFail = False
                     didntRun = True
 
                 if didntRun == True:
                     sg.popup('                    Error: Program Error\n Alert Supervisor for Debuging or Try Again.', title="Error: PrgmErr", modal=True, icon=SVLIcon, font=["Open Sans",20,'bold'])
+                elif symGood == None:
+                    window["-IMAGE-"].update(data=SVLStack)
+                    sg.popup('                    Error: No Image Passed\n Alert Supervisor for Debuging or Try Again.', title="Error: ImgErr", modal=True, icon=SVLIcon, font=["Open Sans",20,'bold'])
                 else:    
                     plot_figure(1, horiz[0], horiz[1])
                     plot_figure(2, vert[0], vert[1])
