@@ -570,6 +570,11 @@ if __name__ == "__main__":
             print(results)
         except Exception as e:
             print(e)
+        cv2.imshow("beam", beamImg)
+        cv2.imshow("intensity", intensityImg)
+        while True:
+            if cv2.waitKey(0) & 0xff == ord('q'):
+                break
     else:
         print("No Picture Passed")
         try:
