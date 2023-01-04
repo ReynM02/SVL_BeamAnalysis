@@ -216,6 +216,7 @@ def loadConfig(light_string):
 #End loadConfig()
 
 def beamMeasure(image, configs):
+    print("in beamMeasure()")
     # Parse Args    
     lightConfig = configs[0]
     sysConfig = configs[1]
@@ -248,7 +249,6 @@ def beamMeasure(image, configs):
         M = cv2.moments(thresh)
         print("moments found")
         # Calculate X,Y Co-ordinates of Blob Centroid
-        
         cX = int(M["m10"] / M["m00"])
         cY = int(M["m01"] / M["m00"])
     except Exception as e:
@@ -261,6 +261,7 @@ def beamMeasure(image, configs):
     # Create an Array of Pixel Locations (x,y) For Pixels With an Intensity
     # Greater Than or Equal to uniformityValue  
     uniformityIndex = np.where(beamImg >= uniformityValue)
+    print("uniformity index created")
 
     minVal = np.asarray(uniformityIndex[1]).min()
     maxVal = np.asarray(uniformityIndex[1]).max()
@@ -325,7 +326,7 @@ def beamMeasure(image, configs):
         # X Passed
         pf[1] = True 
 
-    results = [graphs, pf, symGood, cY, cX, horiz_length, vert_length]
+    results = [pf, symGood, cY, cX, horiz_length, vert_length]
     #             0     1      2     3   4         5          6
     return rgbBeamImg, results
 
@@ -413,15 +414,15 @@ def intensityMeasure(images, configs):
             x=x+1
             horizontal_profile[x-1] = bwImage[cY][x_end-1]
             x_end = x_end - 1
-
+    print("horizontal profile captured")
     # Copy data from image into Vertical Profile
     x = 0
     if y_end != 0:
-        while y_end >= y_start:
+        while y_end > y_start:
             x=x+1
             vertical_profile[x-1] = bwImage[y_end-1][cX]
             y_end = y_end - 1
-
+    print("vertical profile captured")
     # Arrange the plot cross section data
     horiz_x = np.array(range(maxVal-minVal))
     horiz_y = horizontal_profile
@@ -507,7 +508,7 @@ def currentMeasure(lightConfig):
     currentData = currentData.decode("UTF-8")
     current = currentData[:-1]
     currentlist = current.split(",")
-    print(currentlist)
+    #print(currentlist)
     try:
         if int(currentlist[0]) > c0Lo and int(currentlist[0]) < c0Hi:
             pf[0] = True # NPN
@@ -531,7 +532,7 @@ def currentMeasure(lightConfig):
 if __name__ == "__main__":
     ## Non-Reused Code ##
     connect()
-    documentPath = "C:/Users/matt.reynolds/Documents/EOLTester"
+    documentPath = "C:/Users/SVL226/Documents/EOLTester"
     ## Reused Code ##
     # Main Definitions #
     noPic = None
@@ -559,10 +560,12 @@ if __name__ == "__main__":
         print("Picture Passed")
         try:
             LUTBeamImage, results = beamMeasure(beamImg, configs)
+            print(results)
         except Exception as e:
             print(e)
         try:
             results = intensityMeasure(images, configs)
+            print(results)
         except Exception as e:
             print(e)
         try:
@@ -570,7 +573,7 @@ if __name__ == "__main__":
             print(results)
         except Exception as e:
             print(e)
-        cv2.imshow("beam", beamImg)
+        cv2.imshow("beam", LUTBeamImage)
         cv2.imshow("intensity", intensityImg)
         while True:
             if cv2.waitKey(0) & 0xff == ord('q'):
