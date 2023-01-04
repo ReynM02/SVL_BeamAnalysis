@@ -18577,7 +18577,7 @@ LOOK_AND_FEEL_TABLE = {
     "PythonPlus": {"BACKGROUND": "#001d3c", "TEXT": "#ffffff", "INPUT": "#015bbb", "TEXT_INPUT": "#fed500", "SCROLL": "#015bbb",
                "BUTTON": ("#fed500", "#015bbb"), "PROGRESS": ("#015bbb", "#fed500"), "BORDER": 1, "SLIDER_DEPTH": 1, "PROGRESS_DEPTH": 0, },
     "SmartVision": {"BACKGROUND": "#ffffff", "TEXT": "#134A8F", "INPUT": "#e4e4e4", "TEXT_INPUT": "#585757", "SCROLL": "#afacad",
-               "BUTTON": ("#ffffff", "#134A8F"), "PROGRESS": ("#015bbb", "#fed500"), "BORDER": 1, "SLIDER_DEPTH": 1, "PROGRESS_DEPTH": 0, },
+               "BUTTON": ("#ffffff", "#134A8F"), "PROGRESS": ("#134A8F", "#e4e4e4"), "BORDER": 1, "SLIDER_DEPTH": 1, "PROGRESS_DEPTH": 0, },
 }
 
 

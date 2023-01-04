@@ -18,6 +18,7 @@ arduino.baudrate = 19200
 
 documentPath = ""
 
+
 def connect():
     readyString = ""
     ports, pnum = fp.run()
@@ -123,63 +124,74 @@ def flatFieldCorrection(rawImg):
     return correctedImg
 
 def CaptureExt(cam, mode, exp, config):
-    print("in CaptureExt()")
-    print('cam[0] found')
-    expTime = cam.ExposureTime
-    print('exp calc')
-    expTime.set(exp)
-    print("exp set")
-    msg = str(mode) + str(exp)
-    print("msg created")
-    msgbyte = bytes(msg, 'utf-8')
-    print(msgbyte)
-    print("msg converted to byte")
-    arduino.write(msgbyte)
-    print("msg sent to arduino")
-    hs = None
-    print("read duino")
-    try:
-        while hs != b'S':
-            print("in loop")
-            hs = arduino.read(1)
-        try:
-            bgframe = cam.get_frame(timeout_ms=int(exp+100))
-            print("got bgframe")
-            bgframe.convert_pixel_format(PixelFormat.Bgr8)
-            print("converted frame")
-            bgimage = bgframe.as_opencv_image()
-            print("saved as bgimage")
-            arduino.write(bytes("K", 'utf-8'))
-        except:
-            print("timeout")
-            arduino.write(bytes("K", 'utf-8'))
-            raise Exception("NoPic")
+    vimba = Vimba.get_instance()
+    with vimba:
+        cams = vimba.get_all_cameras()
+        with cams[0] as cam:
+            print("in CaptureExt()")
+            print('cam[0] found')
+            try:
+                expTime = cam.ExposureTime
+            except Exception as e:
+                print(e)
+            print('exp calc')
+            try:
+                expTime.set(exp)
+            except Exception as e:
+                print(e)
+            print("exp set")
+            msg = str(mode) + str(exp)
+            print("msg created")
+            msgbyte = bytes(msg, 'utf-8')
+            print(msgbyte)
+            print("msg converted to byte")
+            arduino.write(msgbyte)
+            print("msg sent to arduino")
+            hs = None
+            print("read duino")
+            try:
+                while hs != b'S':
+                    print("in loop")
+                    hs = arduino.read(1)
+                try:
+                    bgframe = cam.get_frame(timeout_ms=int(exp+100))
+                    print("got bgframe")
+                    bgframe.convert_pixel_format(PixelFormat.Bgr8)
+                    print("converted frame")
+                    bgimage = bgframe.as_opencv_image()
+                    print("saved as bgimage")
+                    arduino.write(bytes("K", 'utf-8'))
+                except Exception as e:
+                    print(e)
+                    arduino.write(bytes("K", 'utf-8'))
+                    raise Exception("NoPic")
 
-        hs = None
-        while hs != b'S':
-            hs = arduino.read(1)
-        try:
-            frame = cam.get_frame(timeout_ms=5000)
-            print("got frame")
-            frame.convert_pixel_format(PixelFormat.Bgr8)
-            print("converted frame")
-            image = frame.as_opencv_image()
-            print("image saved as image")
-            arduino.write(bytes("K", 'utf-8'))
-        except:
-            print("timeout2 - continue anyway")
-            arduino.write(bytes("K", 'utf-8'))
-        test = False
-    except:
-        hs = None
-        while hs != b'S':
-            hs = arduino.read(1)
-        arduino.write(bytes("K", 'utf-8'))
-        #arduino.write(bytes("K", 'utf-8'))  
-    try:
-        image = image - bgimage
-    except:
-        return None, None, True
+                hs = None
+                while hs != b'S':
+                    hs = arduino.read(1)
+                try:
+                    frame = cam.get_frame(timeout_ms=5000)
+                    print("got frame")
+                    frame.convert_pixel_format(PixelFormat.Bgr8)
+                    print("converted frame")
+                    image = frame.as_opencv_image()
+                    print("image saved as image")
+                    arduino.write(bytes("K", 'utf-8'))
+                except Exception as e:
+                    print(e)
+                    arduino.write(bytes("K", 'utf-8'))
+                test = False
+            except Exception as e:
+                print(e)
+                hs = None
+                while hs != b'S':
+                    hs = arduino.read(1)
+                arduino.write(bytes("K", 'utf-8'))
+                #arduino.write(bytes("K", 'utf-8'))  
+            try:
+                image = image - bgimage
+            except:
+                return None, None, True
     #image = flatFieldCorrection(image)
     print("bg sub done")
     src = np.float32(config["src"])
