@@ -242,62 +242,58 @@ def saveReport(hidden, path):
     cv2.imwrite(path, image)
 
 def measuring(light_string):
-    data = SLA.loadConfig(light_string)
-    config = SLA.loadConfig("system_setup")
-    if data == 1:
-        raise Exception("LghtCnfgNull")
-    if config == 1:
-        raise Exception("SysCnfgNull")
+    # Main Definitions #
+    noPic = None
+    print("running")
+    lightConfig = CSLA.loadConfig(light_string)
+    systemConfig = CSLA.loadConfig("system_setup")
 
-    configs = [data, config]
-    pf = []
-    mode = data['mode']
-    actualMeasured = []
+    configs = [lightConfig, systemConfig]
 
-    ## Capture Images ##
     try:
-        image, beamImg = CSLA.Capture(mode, data['exposure'], config)
-    except UnboundLocalError:
-        raise Exception("NoImgSent")
-    
-    images = [image, beamImg]
+        intensityImg, beamImg = CSLA.Capture("M", 34000, systemConfig)
+        images = [intensityImg, beamImg]
+    except Exception as e:
+        print(e)
+        if e == "NoCntrlr":
+            noPic = True
+        elif e == "noPic":
+            noPic = True
+        elif e == UnboundLocalError:
+            noPic = True
+        else:
+            noPic = True
 
-    ## Measure Beam Shape and Symmetry ##
-    try:
-        lutBeamImg, results = CSLA.beamMeasure(images, configs)
-    except:
-        raise Exception("Error")
-    # Unpack results
-    graphs = results[0]
-    horiz = graphs[0]
-    vert = graphs[1]
-    beamPF = results[1]
-    symgood = results[2]
-    centroid = [results[4], results[3]]
-    xLen = results[5]
-    yLen = results[6]
-
-    ## Measure Intensity ##
-    try:
-        results = CSLA.intensityMeasure(images, configs)
-    except:
-        raise Exception("Error")
-    # Unpack results
-    flux = results[0]
-    lux = results[1]
-    intensityPF = results[3]
-
-    ## Measure Current ##
-    try: 
-        results = CSLA.currentMeasure()
-    except:
-        raise Exception("Error")
-    # Unpack results
-    npnCurrent = results[0]
-    pnpCurrent10v = results[1]
-    pnpCurrent5v = results[2]
-    odStrobe = results[3] 
-    currentPF = results[5]
+    if noPic == False or noPic == None:
+        print("Picture Passed")
+        try:
+            LUTBeamImage, results = CSLA.beamMeasure(beamImg, configs)
+            print(results)
+        except Exception as e:
+            print(e)
+        try:
+            results = CSLA.intensityMeasure(images, configs)
+            print(results)
+        except Exception as e:
+            print(e)
+        try:
+            results = CSLA.currentMeasure(lightConfig)
+            print(results)
+        except Exception as e:
+            print(e)
+        cv2.imshow("beam", LUTBeamImage)
+        cv2.imshow("intensity", intensityImg)
+        while True:
+            if cv2.waitKey(0) & 0xff == ord('q'):
+                break
+        cv2.destroyAllWindows()    
+    else:
+        print("No Picture Passed")
+        try:
+            results = CSLA.currentMeasure(lightConfig)
+            print(results)
+        except Exception as e:
+            print(e)
 
 
 def main():
@@ -379,6 +375,7 @@ def main():
             window["-TIME-"].update(str(sysTime.strftime("%Y-%m-%d") + ' ' + sysTime.strftime("%H:%M:%S")))
             window["-PNSN-"].update(str(light_string + "\n" + serialNum))
             #print(splitString)
+            threading.Thread(target=measuring).start()
             measuring(light_string)
             try:
                 light = splitString[0]
