@@ -460,6 +460,7 @@ def main():
                 sg.popup('        Error: Invalid Configuration\n Please Re-Enter Light P/N and S/N.', title="Error: InvalConfgErr", modal=True, icon=SVLIcon, font=["Open Sans",20,'bold'])
                 print("lightgistics")
                 invalConfig = True
+
             if invalConfig == False:
                 try:
                     lens = splitString[3]
@@ -472,162 +473,164 @@ def main():
 
                 print(light_string)
 
-                try:
-                    frame, horiz, vert, results, symGood, pf, passFail = 0
-                    data = SLA.loadConfig(light_string)
-                    didntRun = True
-                except:
-                    #print(frame)
-                    passFail = False
-                    didntRun = True
+                data = SLA.loadConfig(light_string)
+                flux = measuredData.flux
+                lux = measuredData.lux
+                cY = measuredData.symmetry[1]
+                cX = measuredData.symmetry[0]
+                xLen = measuredData.size[0]
+                yLen = measuredData.size[1]
+                npnCurrent = measuredData.npnCurrent
+                pnpCurrent10v = measuredData.pnpHiCurrent
+                pnpCurrent5v = measuredData.pnpLoCurrent
+                odStrobe = measuredData.odPeak
+                symGood = measuredData.symGood
 
-                if didntRun == True:
-                    sg.popup('                    Error: Program Error\n Alert Supervisor for Debuging or Try Again.', title="Error: PrgmErr", modal=True, icon=SVLIcon, font=["Open Sans",20,'bold'])
-                elif symGood == None:
-                    window["-IMAGE-"].update(data=SVLStack)
-                    sg.popup('                    Error: No Image Passed\n Alert Supervisor for Debuging or Try Again.', title="Error: ImgErr", modal=True, icon=SVLIcon, font=["Open Sans",20,'bold'])
-                else:    
-                    plot_figure(1, horiz[0], horiz[1])
-                    plot_figure(2, vert[0], vert[1])
-                    #frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+                #if didntRun == True:
+                    #sg.popup('                    Error: Program Error\n Alert Supervisor for Debuging or Try Again.', title="Error: PrgmErr", modal=True, icon=SVLIcon, font=["Open Sans",20,'bold'])
+                    #sg.popup('                    Error: No Image Passed\n Alert Supervisor for Debuging or Try Again.', title="Error: ImgErr", modal=True, icon=SVLIcon, font=["Open Sans",20,'bold'])
+                #else:   
+                plot_figure(1, measuredData.graphs[0][0], measuredData.graphs[0][1])
+                plot_figure(2, measuredData.graphs[1][0], measuredData.graphs[1][1])
+                #frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
-                    # Update Values for Report Tab
+                # Update Values for Report Tab
 
 
-                    imgPath = SLA.documentPath+"/Images/"
-                    #print (os.path.join(imgPath, light_string+'_'+serialNum+'_'+dateString+'.jpg'))
-                    isWritten = cv2.imwrite(imgPath+light_string+'_'+serialNum+'_'+dateString+'.jpg', frame)
+                imgPath = SLA.documentPath+"/Images/"
+                #print (os.path.join(imgPath, light_string+'_'+serialNum+'_'+dateString+'.jpg'))
+                isWritten = cv2.imwrite(imgPath+light_string+'_'+serialNum+'_'+dateString+'.jpg', measuredData.beamImg)
 
-                    if isWritten:
-                        print("image saved")
-                    else:
-                        print("image not saved")
+                if isWritten:
+                    print("image saved")
+                else:
+                    print("image not saved")
 
-                    imgbytes = cv2.imencode(".png", frame)[1].tobytes()
-                    window["-IMAGE-"].update(data=imgbytes)
-                    csvPath = SLA.documentPath + '/Data/' + str(month) + '-' + str(day) + '-' + str(year) + '_Light_Measurements.csv'
-                    rowData = [light_string, serial_num]
-                    rowData.extend(results)
-                    append_list_as_row(csvPath, rowData)
-                    flux = results[0]
-                    lux = results[1]
-                    cY = results[2]
-                    cX = results[3]
-                    xLen = results[4]
-                    yLen = results[5]
-                    npnCurrent = results[6]
-                    pnpCurrent10v = results[7]
-                    pnpCurrent5v = results[8]
-                    odStrobe = results[9]
-                  
+                imgbytes = cv2.imencode(".png", measuredData.beamImg)[1].tobytes()
+                window["-IMAGE-"].update(data=imgbytes)
+                csvPath = SLA.documentPath + '/Data/' + str(month) + '-' + str(day) + '-' + str(year) + '_Light_Measurements.csv'
+                rowData = [light_string, serial_num]
+                #rowData.extend(results)
+                append_list_as_row(csvPath, rowData)                
 
-                    ### - PASS FAIL ASSIGNMENTS - ###
-                    # - FLUX OPERATIONS
-                    flxMZRDStr = str("{:.1e}".format(flux))
-                    window["-FLXMZRD-"].update(flxMZRDStr)
-                    if pf[0] == True:
-                        window["-FLXPF-"].update("PASS", text_color='green')
-                    else:
-                        window["-FLXPF-"].update("FAIL", text_color='red')
-                    flxHLStr = str("{:.1e}".format(data["flux_good"]))+"±"+str("{:.1e}".format(data["flux_tolerance"]))
-                    window["-FLXHL-"].update(flxHLStr)
+                ### - PASS FAIL ASSIGNMENTS - ###
+                # - FLUX OPERATIONS
+                flxMZRDStr = str("{:.1e}".format(flux))
+                window["-FLXMZRD-"].update(flxMZRDStr)
+                if measuredData.intensityPf[0] == True:
+                    window["-FLXPF-"].update("PASS", text_color='green')
+                else:
+                    window["-FLXPF-"].update("FAIL", text_color='red')
+                flxHLStr = str("{:.1e}".format(data["flux_good"]))+"±"+str("{:.1e}".format(data["flux_tolerance"]))
+                window["-FLXHL-"].update(flxHLStr)
 
-                    # - LUX OPERATIONS
-                    window["-LXMZRD-"].update("{:.1e}".format(lux))
-                    if pf[1] == True:
-                        window["-LXPF-"].update("PASS", text_color='green')
-                    else:
-                        window["-LXPF-"].update("FAIL", text_color='red')
-                    lxHLStr = str("{:.1e}".format(data["lux_good"]))+"±"+str(data["lux_tolerance"])
-                    window["-LXHL-"].update(lxHLStr)
+                # - LUX OPERATIONS
+                window["-LXMZRD-"].update("{:.1e}".format(lux))
+                if measuredData.intensityPf[1] == True:
+                    window["-LXPF-"].update("PASS", text_color='green')
+                else:
+                    window["-LXPF-"].update("FAIL", text_color='red')
+                lxHLStr = str("{:.1e}".format(data["lux_good"]))+"±"+str(data["lux_tolerance"])
+                window["-LXHL-"].update(lxHLStr)
 
-                    # - SYMMETRY OPERATIONS
-                    symMZRDStr = "("+str(cX)+","+str(cY)+")"
-                    window["-SYMMZRD-"].update(symMZRDStr)
-                    if pf[2] == True:
-                        window["-SYMPF-"].update("PASS", text_color='green')
-                    else:
-                        window["-SYMPF-"].update("FAIL", text_color='red')
-                    symHLStr = "("+ str(symGood[0]) +","+str(symGood[1])+"±"+str(data["symmetry_tolerance"])+")"
-                    window["-SYMHL-"].update(symHLStr)
-                    
-                    # - BEAM-SIZE OPERATIONS
-                    szMZRDStr = "("+str(xLen)+","+str(yLen)+")"
-                    window["-SZMZRD-"].update(szMZRDStr)
-                    if pf[3] == True:
-                        window["-SZPF-"].update("PASS", text_color='green')
-                    else:
-                        window["-SZPF-"].update("FAIL", text_color='red')
-                    szHLStr = "("+ str(data["x_good"]) + "±" + str(data["x_tolerance"]) +","+str(symGood[1])+"±"+str(data["symmetry_tolerance"])+")"
-                    window["-SZHL-"].update(szHLStr)
+                # - SYMMETRY OPERATIONS
+                symMZRDStr = "("+str(cX)+","+str(cY)+")"
+                window["-SYMMZRD-"].update(symMZRDStr)
+                if measuredData.beamPf[0] == True:
+                    window["-SYMPF-"].update("PASS", text_color='green')
+                else:
+                    window["-SYMPF-"].update("FAIL", text_color='red')
+                symHLStr = "("+ str(symGood[0]) +","+str(symGood[1])+"±"+str(data["symmetry_tolerance"])+")"
+                window["-SYMHL-"].update(symHLStr)
+                
+                # - BEAM-SIZE OPERATIONS
+                szMZRDStr = "("+str(xLen)+","+str(yLen)+")"
+                window["-SZMZRD-"].update(szMZRDStr)
+                if measuredData.beamPf[1] == True:
+                    window["-SZPF-"].update("PASS", text_color='green')
+                else:
+                    window["-SZPF-"].update("FAIL", text_color='red')
+                szHLStr = "("+ str(data["x_good"]) + "±" + str(data["x_tolerance"]) +","+str(symGood[1])+"±"+str(data["symmetry_tolerance"])+")"
+                window["-SZHL-"].update(szHLStr)
 
-                    # - CURRENT OPERATIONS
-                    # High/Low Strings
-                    pcrntHLStr = str(data["cont_peak_current_good"]) + "±" + str(data["cont_peak_current_tolerance"])
-                    window["-PCRNTHL-"].update(pcrntHLStr)
-                    pcrntoHLStr = str(data["od_peak_current_good"]) + "±" + str(data["od_peak_current_tolerance"])
-                    window["-PCRNTOHL-"].update(pcrntoHLStr)
-                    npncrntHLStr = str(data["npn_current_good"]) + "±" + str(data["npn_current_tolerance"])
-                    window["-NPNCRNTHL-"].update(npncrntHLStr)
-                    pnphiHLStr = str(data["pnp_high_current_good"]) + "±" + str(data["pnp_high_current_tolerance"])
-                    window["-PNPHIHL-"].update(pnphiHLStr)
-                    pnploHLStr = str(data["pnp_low_current_good"]) + "±" + str(data["pnp_low_current_tolerance"])
-                    window["-PNPLOHL-"].update(pnploHLStr)
-                    ahiHLStr = str(data["analog_high_current_good"]) + "±" + str(data["analog_high_current_tolerance"])
-                    window["-AHIHL-"].update(ahiHLStr)
-                    alowHLStr = str(data["analog_low_current_good"]) + "±" + str(data["analog_low_current_tolerance"])
-                    window["-ALOHL-"].update(alowHLStr)
-                    # Measured updates
-                    window["-PCRNTMZRD-"].update(npnCurrent)    # peak current from cont. mode
-                    window["-PCRNTOMZRD-"].update(odStrobe)     # peak current from OD mode
-                    window["-NPNCRNTMZRD-"].update(npnCurrent)  # peak current when triggered with NPN line
-                    window["-PNPHIMZRD-"].update(pnpCurrent10v) # peak current when triggered with 10v on PNP line
-                    window["-PNPLOMZRD-"].update(pnpCurrent5v)  # peak current when triggered with 5v on PNP line
-                    window["-AHIMZRD-"].update(npnCurrent)      # peak current when triggered with analog at 10v
-                    window["-ALOMZRD-"].update(pnpCurrent5v)    # peak current when triggered with analog at 5v
-                    # Pass/Fail
-                    if pf[4] == True:
-                        window["-NPNCRNTPF-"].update("PASS", text_color='green')
-                        window["-PCRNTPF-"].update("PASS", text_color='green')
-                        window["-AHIPF-"].update("PASS", text_color='green')
-                    else:
-                        window["-NPNCRNTPF-"].update("FAIL", text_color='red')
-                        window["-PCRNTPF-"].update("FAIL", text_color='red')
-                        window["-AHIPF-"].update("FAIL", text_color='red')
-                    if pf[5] == True:
-                        window["-PNPHIPF-"].update("PASS", text_color='green')
-                    else:
-                        window["-PNPHIPF-"].update("FAIL", text_color='red')
-                    if pf[6] == True:
-                        window["-PNPLOPF-"].update("PASS", text_color='green')
-                        window["-ALOPF-"].update("PASS", text_color='green')
-                    else:
-                        window["-PNPLOPF-"].update("FAIL", text_color='red')
-                        window["-ALOPF-"].update("FAIL", text_color='red')
-                    if pf[7] == True:
-                        window["-PCRNTOPF-"].update("PASS", text_color='green')
-                    else:
-                        window["-PCRNTOPF-"].update("FAIL", text_color='red')
-                    
-                    if passFail:
-                        output = [
-                            [sg.Text("", text_color="green", font=["",20,"bold"], justification="center", size=(10, 1))],               
-                            [sg.Text("PASS", text_color="green", font=["",50,"bold"], justification="center", size=(10, 1))],
-                            [sg.Text(str(rowData))],
-                            [sg.OK(size=(10,1), font=["",50,""],p=((15,0),(0,0)))]
-                        ]
-                        window["-STATUS-"].update("PASS", text_color="green")
-                    else:
-                        output = [
-                            [sg.Text("", text_color="green", font=["",20,"bold"], justification="center", size=(10, 1))],               
-                            [sg.Text("FAIL", text_color="red", font=["",50,"bold"], justification="center", size=(10, 1))],
-                            [sg.Text(str(rowData))],
-                            [sg.OK(size=(10,1), font=["",50,""],p=((15,0),(0,0)))]
-                        ]
-                        window["-STATUS-"].update("FAIL", text_color="red")
-                    pathStr = SLA.documentPath + "/ReportImages/" + light_string + '_'+ serialNum + '_' + dateString + '.jpg'
-                    saveReport(hidden, pathStr)
-                    choice, _ = sg.Window('Measurment Data', output, modal=False).read(close=True)
+                # - CURRENT OPERATIONS
+                # High/Low Strings
+                pcrntHLStr = str(data["cont_peak_current_good"]) + "±" + str(data["cont_peak_current_tolerance"])
+                window["-PCRNTHL-"].update(pcrntHLStr)
+                pcrntoHLStr = str(data["od_peak_current_good"]) + "±" + str(data["od_peak_current_tolerance"])
+                window["-PCRNTOHL-"].update(pcrntoHLStr)
+                npncrntHLStr = str(data["npn_current_good"]) + "±" + str(data["npn_current_tolerance"])
+                window["-NPNCRNTHL-"].update(npncrntHLStr)
+                pnphiHLStr = str(data["pnp_high_current_good"]) + "±" + str(data["pnp_high_current_tolerance"])
+                window["-PNPHIHL-"].update(pnphiHLStr)
+                pnploHLStr = str(data["pnp_low_current_good"]) + "±" + str(data["pnp_low_current_tolerance"])
+                window["-PNPLOHL-"].update(pnploHLStr)
+                ahiHLStr = str(data["analog_high_current_good"]) + "±" + str(data["analog_high_current_tolerance"])
+                window["-AHIHL-"].update(ahiHLStr)
+                alowHLStr = str(data["analog_low_current_good"]) + "±" + str(data["analog_low_current_tolerance"])
+                window["-ALOHL-"].update(alowHLStr)
+                # Measured updates
+                window["-PCRNTMZRD-"].update(npnCurrent)    # peak current from cont. mode
+                window["-PCRNTOMZRD-"].update(odStrobe)     # peak current from OD mode
+                window["-NPNCRNTMZRD-"].update(npnCurrent)  # peak current when triggered with NPN line
+                window["-PNPHIMZRD-"].update(pnpCurrent10v) # peak current when triggered with 10v on PNP line
+                window["-PNPLOMZRD-"].update(pnpCurrent5v)  # peak current when triggered with 5v on PNP line
+                window["-AHIMZRD-"].update(npnCurrent)      # peak current when triggered with analog at 10v
+                window["-ALOMZRD-"].update(pnpCurrent5v)    # peak current when triggered with analog at 5v
+                # Pass/Fail
+                if measuredData.currentPf[0] == True:
+                    window["-NPNCRNTPF-"].update("PASS", text_color='green')
+                    window["-PCRNTPF-"].update("PASS", text_color='green')
+                    window["-AHIPF-"].update("PASS", text_color='green')
+                else:
+                    window["-NPNCRNTPF-"].update("FAIL", text_color='red')
+                    window["-PCRNTPF-"].update("FAIL", text_color='red')
+                    window["-AHIPF-"].update("FAIL", text_color='red')
+                if measuredData.currentPf[1] == True:
+                    window["-PNPHIPF-"].update("PASS", text_color='green')
+                else:
+                    window["-PNPHIPF-"].update("FAIL", text_color='red')
+                if measuredData.currentPf[2] == True:
+                    window["-PNPLOPF-"].update("PASS", text_color='green')
+                    window["-ALOPF-"].update("PASS", text_color='green')
+                else:
+                    window["-PNPLOPF-"].update("FAIL", text_color='red')
+                    window["-ALOPF-"].update("FAIL", text_color='red')
+                if measuredData.currentPf[3] == True:
+                    window["-PCRNTOPF-"].update("PASS", text_color='green')
+                else:
+                    window["-PCRNTOPF-"].update("FAIL", text_color='red')
+                
+                pf = []
+                pf.extend(measuredData.beamPf)
+                pf.extend(measuredData.intensityPf)
+                pf.extend(measuredData.currentPf)
+                
+                passFail = True
+
+                for i in pf:
+                    if pf[i] == False:
+                        passFail = False
+
+                if passFail:
+                    output = [
+                        [sg.Text("", text_color="green", font=["",20,"bold"], justification="center", size=(10, 1))],               
+                        [sg.Text("PASS", text_color="green", font=["",50,"bold"], justification="center", size=(10, 1))],
+                        [sg.Text(str(rowData))],
+                        [sg.OK(size=(10,1), font=["",50,""],p=((15,0),(0,0)))]
+                    ]
+                    window["-STATUS-"].update("PASS", text_color="green")
+                else:
+                    output = [
+                        [sg.Text("", text_color="green", font=["",20,"bold"], justification="center", size=(10, 1))],               
+                        [sg.Text("FAIL", text_color="red", font=["",50,"bold"], justification="center", size=(10, 1))],
+                        [sg.Text(str(rowData))],
+                        [sg.OK(size=(10,1), font=["",50,""],p=((15,0),(0,0)))]
+                    ]
+                    window["-STATUS-"].update("FAIL", text_color="red")
+                pathStr = SLA.documentPath + "/ReportImages/" + light_string + '_'+ serialNum + '_' + dateString + '.jpg'
+                saveReport(hidden, pathStr)
+                choice, _ = sg.Window('Measurment Data', output, modal=False).read(close=True)
             window['-MEASURE-'].update(disabled=False)
         elif event == "-LIGHT-":
             if values["-LIGHT-"] == 'JWL':

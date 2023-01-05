@@ -61,6 +61,7 @@ class MeasuredData:
     intensityPf = []
     currentPf = []
     graphs = []
+    symGood = []
 
     def __init__(self):
         self.flux = None
@@ -76,10 +77,11 @@ class MeasuredData:
         self.analogLo = None
         self.beamImg = None
         self.intensityImg = None
-        self.beamPf = []
-        self.intensityPf = []
-        self.currentPf = []
-        self.graphs = []
+        self.beamPf = [None, None]
+        self.intensityPf = [None, None]
+        self.currentPf = [None, None, None, None, None]
+        self.graphs = [None, None]
+        self.symGood = [None, None]
     
 class unused:
     def getList(self, dst):
@@ -461,10 +463,10 @@ def beamMeasure(beamImg, configs, loadBar = LoadBarLevel, measuredData = Measure
     loadBar.increase()
     ## PASS/FAIL CALCULATION ##
     # -- Symmetry
-    if cY-midpoint_vertical < symmetryGap and cX-midpoint_horizontal < symmetryGap:
+    if midpoint_vertical-cY < symmetryGap and cX-midpoint_horizontal < symmetryGap:
         # Symmetry Passed
         pf[0] = True
-    symGood = [cX-midpoint_horizontal, cY-midpoint_vertical]
+    symGood = [cX-midpoint_horizontal, midpoint_vertical-cY]
     loadBar.increase()
     # -- X,Y Value
     if horiz_length > xLow and horiz_length < xHigh and vert_length > yLow and vert_length < yHigh:
@@ -477,6 +479,7 @@ def beamMeasure(beamImg, configs, loadBar = LoadBarLevel, measuredData = Measure
     measuredData.beamImg = rgbBeamImg
     measuredData.beamPf = pf
     measuredData.symmetry = [cX, cY]
+    measuredData.symGood = symGood
     measuredData.size = [horiz_length, vert_length]
     measuredData.boxMiddle = [midpoint_horizontal, midpoint_vertical]
     
