@@ -241,7 +241,7 @@ def saveReport(hidden, path):
     cv2.imshow("report", image)
     cv2.imwrite(path, image)
 
-def measuring(light_string, window):
+def measuring(light_string, window, measuredData):
     # Main Definitions #
     proglevel = CSLA.LoadBarLevel(window, 100)
     print(proglevel.max)
@@ -254,7 +254,7 @@ def measuring(light_string, window):
     proglevel.increase()
     configs = [lightConfig, systemConfig]
     try:
-        intensityImg, beamImg = CSLA.Capture("M", 34000, systemConfig, proglevel)
+        intensityImg, beamImg = CSLA.Capture("M", 34000, systemConfig, proglevel, measuredData)
         images = [intensityImg, beamImg]
     except Exception as e:
         print(e)
@@ -269,51 +269,93 @@ def measuring(light_string, window):
     proglevel.increase()
     if noPic == False or noPic == None:
         print("Picture Passed")
-        try:
-            LUTBeamImage, results = CSLA.beamMeasure(beamImg, configs, proglevel)
-            print(results)
-        except Exception as e:
-            print(e)
-        proglevel.increase()
-        try:
-            results = CSLA.intensityMeasure(images, configs, proglevel)
-            print(results)
-        except Exception as e:
-            print(e)
-        proglevel.increase()
-        try:
-            results = CSLA.currentMeasure(lightConfig, proglevel)
-            print(results)
-        except Exception as e:
-            print(e)
-        proglevel.increase()
-        cv2.imshow("beam", LUTBeamImage)
-        cv2.imshow("intensity", intensityImg)
-        while True:
-            if cv2.waitKey(0) & 0xff == ord('q'):
-                break
-        cv2.destroyAllWindows()
-    else:
-        print("No Picture Passed")
-        try:
-            results = CSLA.currentMeasure(lightConfig, proglevel)
-            print(results)
-        except Exception as e:
-            print(e)
+        beam = threading.Thread(target=CSLA.beamMeasure,
+                                args=(beamImg, configs, proglevel, ),
+                                daemon=True)
+        intensity = threading.Thread(target=CSLA.intensityMeasure,
+                                args=(images, configs, proglevel, ),
+                                daemon=True)
+        current = threading.Thread(target=CSLA.currentMeasure,
+                                args=(lightConfig, proglevel, ),
+                                daemon=True)
+        
+        beam.start()
+        intensity.start()
+        current.start()
+        
+        beam.join()
+        intensity.join()
+        current.join()
+        
     proglevel.increase(True)
     time.sleep(0.1)
     print(proglevel.level)
+    window.write_event_value('Exit', '')
+
+def firstLaunch(window):
+    setupBar = CSLA.LoadBarLevel(window, 40)
+    window.write_event_value('update_-ACTION-', "Getting User: ")
+    user_list = psutil.users() # Gets all connected users
+    setupBar.increase()
+    user = user_list[0].name # Gets name of current user
+    setupBar.increase()
+    window.write_event_value('update_-ACTION-', str("User is: "+user))
+    print(user)
+    CSLA.documentPath = 'C:/Users/' + user + '/Documents/EOLTester'
+    SLA.documentPath = 'C:/Users/' + user + '/Documents/EOLTester'
+    window.write_event_value('update_-ACTION-', "Document Path Set")
+    setupBar.increase()
+    # Connect to camera and load settings
+    window.write_event_value('update_-ACTION-', "Connecting To Camera")
+    with Vimba.get_instance() as vimba:
+        setupBar.increase()
+        cams = vimba.get_all_cameras()
+        setupBar.increase()
+        cams[0].set_access_mode(AccessMode.Full)
+        setupBar.increase()
+        with cams[0] as cam:
+            setupBar.increase()
+            cam.load_settings(SLA.documentPath +"/src/EOLTestSettings.xml", PersistType.NoLUT)
+            setupBar.increase()
+    window.write_event_value('update_-ACTION-', "Connected")
+    # Check if save paths are created, create if not created
+    window.write_event_value('update_-ACTION-', "Checking File Paths")
+    if not os.path.exists(SLA.documentPath):
+        os.makedirs(SLA.documentPath)
+        window.write_event_value('update_-ACTION-', "Created Root")
+    window.write_event_value('update_-ACTION-', "Root Good")
+    setupBar.increase()
+    if not os.path.exists(SLA.documentPath+'/Images'):
+        os.makedirs(SLA.documentPath+'/Images')
+        window.write_event_value('update_-ACTION-', "Created Images")
+    setupBar.increase()
+    window.write_event_value('update_-ACTION-', "Root Good")
+    if not os.path.exists(SLA.documentPath+'/Data'):
+        os.makedirs(SLA.documentPath+'/Data')
+        window.write_event_value('update_-ACTION-', "Created Data")
+    window.write_event_value('update_-ACTION-', "Data Good")
+    setupBar.increase()
+    if not os.path.exists(SLA.documentPath+'/Reports'):
+        os.makedirs(SLA.documentPath+'/Reports')
+        window.write_event_value('update_-ACTION-', "Created Reports")
+    window.write_event_value('update_-ACTION-', "Reports Good")
+    setupBar.increase()
+    window.write_event_value('update_-ACTION-', "Connecting to Arduino")
+    CSLA.connect(setupBar) # Connect to the electronics measurment tool 
+    setupBar.increase(True)
+    window.write_event_value('update_-ACTION-', "Connected to Arduino")
+    time.sleep(0.1)
     window.write_event_value('Exit', '')
 
 def loading(window):
     print(window.was_closed())
     while window.was_closed() == False:
         try:
-            window.write_event_value('-load-', ".")
+            window.write_event_value('update_-load-', ".")
             time.sleep(0.75)
-            window.write_event_value('-load-', "..")
+            window.write_event_value('update_-load-', "..")
             time.sleep(0.75)
-            window.write_event_value('-load-', "...")
+            window.write_event_value('update_-load-', "...")
             time.sleep(0.75)
             continue
         except:
@@ -332,48 +374,27 @@ def main():
             global camera
             global user
             setupLayout = [
-                [sg.Text("Setting Up The Program", font=["Open Sans",20,"bold"],size=(30,1), justification="center", pad=(0, 30))],
-                [sg.ProgressBar(max_value=26, orientation='h', size=(35, 30), key='-SETUPPROG-', expand_x=True, pad=(0, 10))]
+                [sg.Text(text="Setting Up The Program", key="-ACTION-", font=["Open Sans",20,"bold"],size=(21,1), justification="right", pad=(0, 30)),
+                sg.Text("...", key='-load-', font=["Open Sans",20,"bold"],size=(5,1), justification="left", pad=(0, 30))],
+                [sg.ProgressBar(max_value=26, orientation='h', size=(35, 30), key='-PROG-', expand_x=True, pad=(0, 10))]
             ]
-            setupWin = sg.Window("Setting up", setupLayout, finalize=True, modal=True, disable_close=True, disable_minimize=True)
-            user_list = psutil.users() # Gets all connected users
-            setupWin['-SETUPPROG-'].update(1)
-            user = user_list[0].name # Gets name of current user
-            setupWin['-SETUPPROG-'].update(2)
-            print(user)
-            CSLA.documentPath = 'C:/Users/' + user + '/Documents/EOLTester'
-            SLA.documentPath = 'C:/Users/' + user + '/Documents/EOLTester'
-            setupWin['-SETUPPROG-'].update(3)
-            with Vimba.get_instance() as vimba:
-                setupWin['-SETUPPROG-'].update(4)
-                cams = vimba.get_all_cameras()
-                setupWin['-SETUPPROG-'].update(5)
-                cams[0].set_access_mode(AccessMode.Full)
-                setupWin['-SETUPPROG-'].update(6)
-                with cams[0] as cam:
-                    setupWin['-SETUPPROG-'].update(7)
-                    cam.load_settings(SLA.documentPath +"/src/EOLTestSettings.xml", PersistType.NoLUT)
-                    setupWin['-SETUPPROG-'].update(8)
-                    camera = cam
-                    setupWin['-SETUPPROG-'].update(9)
-            # Check if save paths are created, create if not created
-            if not os.path.exists(SLA.documentPath):
-                os.makedirs(SLA.documentPath)
-            setupWin['-SETUPPROG-'].update(10)
-            if not os.path.exists(SLA.documentPath+'/Images'):
-                os.makedirs(SLA.documentPath+'/Images')
-            setupWin['-SETUPPROG-'].update(11)
-            if not os.path.exists(SLA.documentPath+'/Data'):
-                os.makedirs(SLA.documentPath+'/Data')
-            setupWin['-SETUPPROG-'].update(12)
-            if not os.path.exists(SLA.documentPath+'/Reports'):
-                os.makedirs(SLA.documentPath+'/Reports')
-            setupWin['-SETUPPROG-'].update(13)
-            CSLA.connect() # Connect to the electronics measurment tool 
-            setupWin['-SETUPPROG-'].update(26)
+            setupWin = sg.Window("Setting up...", setupLayout, finalize=True, modal=True, disable_close=True, disable_minimize=True)
+            threading.Thread(target=firstLaunch, args=(setupWin, ), daemon=True).start()
+            loadingThread = threading.Thread(target=loading, args=(setupWin, ), daemon=True)
+            loadingThread.start()
+            while True:
+                localEvent, values = setupWin.read(timeout=20)
+                if localEvent == 'Exit':
+                    break
+                if localEvent.startswith('update_'):
+                    key_to_update = localEvent[len('update_'):]
+                    setupWin[key_to_update].update(values[localEvent])
+                    setupWin.refresh()
+                    continue
             launched = False
-            time.sleep(.25)
+            time.sleep(.15)
             setupWin.close()
+            loadingThread.join()
         if event == "Exit" or event == sg.WIN_CLOSED: # Exit Button Pressed or Window Closed
             break
         elif event == "-HIDE-":
@@ -402,25 +423,21 @@ def main():
             ProgLayout = [
                 [sg.Text(text="Measuring In Progress", font=["Open Sans",20,"bold"],size=(21,1), justification="right", pad=(0, 30)),
                 sg.Text("...", key='-load-', font=["Open Sans",20,"bold"],size=(5,1), justification="left", pad=(0, 30))],
-                [sg.ProgressBar(max_value=100, orientation='h', size=(20,30), key='-MZRPROG-', expand_x = True)]
+                [sg.ProgressBar(max_value=100, orientation='h', size=(20,30), key='-PROG-', expand_x = True)]
             ]
             ProgWin = sg.Window("Measuring...", ProgLayout, finalize=True, modal=True, disable_close=True, disable_minimize=True)
-            measureThread = threading.Thread(target=measuring, args=(light_string, ProgWin, ), daemon=True)
+            measuredData = CSLA.MeasuredData()
+            measureThread = threading.Thread(target=measuring, args=(light_string, ProgWin, measuredData, ), daemon=True)
             loadingThread = threading.Thread(target=loading, args=(ProgWin, ), daemon=True)
             measureThread.start()
             loadingThread.start()
             while True:
-                event, values = ProgWin.read(timeout=20)
-                if event == 'Exit':
+                localEvent, values = ProgWin.read(timeout=20)
+                if localEvent == 'Exit':
                     break
-                if event == '-MZRPROG-':
-                    key_to_update = event
-                    ProgWin[key_to_update].update(values[event])
-                    ProgWin.refresh()
-                    continue
-                if event == '-load-':
-                    key_to_update = event
-                    ProgWin[key_to_update].update(values[event])
+                if localEvent.startswith('update_'):
+                    key_to_update = localEvent[len('update_'):]
+                    ProgWin[key_to_update].update(values[localEvent])
                     ProgWin.refresh()
                     continue
             ProgWin.close()

@@ -18,15 +18,19 @@ arduino.baudrate = 19200
 
 documentPath = ""
 
+class NotAListError(Exception): ...
+
 class LoadBarLevel:
     level = 0
 
-    def __init__(self, window, max = None):
+    def __init__(self, window = None, max = None):
         self.window = window
         self.max = max
 
     def increase(self, last = False):
-        if self.max == None or self.level < self.max:
+        if self.max == None:
+            self.level += 1
+        elif self.max != None and self.level < self.max:
             if last == False:
                 self.level += 1
             else:
@@ -35,39 +39,126 @@ class LoadBarLevel:
         else:
             self.level = self.level
         print(self.level)
-        self.window.write_event_value('-MZRPROG-', self.level)
+        if self.window != None:
+            self.window.write_event_value('update_-PROG-', self.level)
 
-def connect():
+class MeasuredData:
+    flux = int
+    lux = int
+    symmetry = [int, int]
+    boxMiddle = [int, int]
+    size = [int, int]
+    contPeak = str
+    odPeak = str
+    npnCurrent = str
+    pnpHiCurrent = str
+    pnpLoCurrent = str
+    analogHi = str
+    analogLo = str
+    beamImg = []
+    intensityImg = []
+    beamPf = []
+    intensityPf = []
+    currentPf = []
+    graphs = []
+
+    def __init__(self):
+        self.flux = None
+        self.lux = None
+        self.symmetry = [None, None]
+        self.size = [None, None]
+        self.contPeak = None
+        self.odPeak = None
+        self.npnCurrent = None
+        self.pnpHiCurrent = None
+        self.pnpLoCurrent = None
+        self.analogHi = None
+        self.analogLo = None
+        self.beamImg = None
+        self.intensityImg = None
+        self.beamPf = []
+        self.intensityPf = []
+        self.currentPf = []
+        self.graphs = []
+    
+class unused:
+    def getList(self, dst):
+        attr = getattr(self, dst)
+        return attr
+
+    def addList(self, dst):
+        setattr(self, dst, [])
+    
+    def delList(self, dst):
+        delattr(self, dst)
+        
+    def add(self, dst = "", data = list):
+        if hasattr(self, dst):
+            attr = getattr(self, dst)
+            print(vars(self))
+            if attr != None:
+                print(data)
+                attr.extend(data)
+            else:
+                raise NotAListError
+        else:
+            self.addList(dst)
+            self.add(dst, data)
+
+    def get(self):
+        lists = vars(self)
+        for i in lists:
+            print(i)
+            src = self.getList(i)
+            self.dataList.extend(src)
+        return self.dataList
+
+def connect(progBar = None):
     """
     Finds and connects to arduino. Searches through all availible serial COM ports looking for
     serial message "SLA".
 
+    :param progBar:    Instance of the LoadBarLevel Class
+    :type progBar:     LoadBarLevel
     :return:           True if the arduino is found. False if the arduino is not found.
     :rtype:            bool
     """
+
+    if progBar == None:
+        progBar = LoadBarLevel()
+
     readyString = ""
+    progBar.increase()
     ports, pnum = fp.run()
+    progBar.increase()
     x=0
     #print(ports, pnum)
     while x < pnum:
         print(x)
+        progBar.increase()
         arduino.port = ports[x]
         #print(ports[x])
         arduino.open()
+        progBar.increase()
         time.sleep(2)
         if arduino.is_open:
             ready = arduino.read_all()
+            progBar.increase()
             try:
                 readyString = ready.decode("UTF-8")
             except:
                 readyString = "not matching baudrate"
             #print(readyString)
+            progBar.increase()
         if readyString == 'SLA':
             #print("found it")
+            progBar.increase()
             return True
         else:
             arduino.close()
             x += 1
+            progBar.increase()
+    progBar.increase()
     return False
 
 def unwarpImg(img, src, dst):
@@ -133,6 +224,7 @@ def Capture(mode, exp, config, loadBar = LoadBarLevel):
     :return:           The intesnity image and the beam image.
     :rtype:            ndarray
     """
+
     with Vimba.get_instance() as vimba:
         loadBar.increase()
         cams = vimba.get_all_cameras()
@@ -247,6 +339,7 @@ def Capture(mode, exp, config, loadBar = LoadBarLevel):
     loadBar.increase()
     beamImg = beamImg.astype(np.uint8)
     loadBar.increase()
+    
     return unwarped, beamImg
 #End CaptureExt() 
 
@@ -263,7 +356,7 @@ def loadConfig(light_string):
     return data
 #End loadConfig()
 
-def beamMeasure(beamImg, configs, loadBar = LoadBarLevel):
+def beamMeasure(beamImg, configs, loadBar = LoadBarLevel, measuredData = MeasuredData):
     print("in beamMeasure()")
     loadBar.increase()
     # Parse Args    
@@ -380,9 +473,16 @@ def beamMeasure(beamImg, configs, loadBar = LoadBarLevel):
     loadBar.increase()
     results = [pf, symGood, cY, cX, horiz_length, vert_length]
     #             0     1      2     3   4         5          6
+    
+    measuredData.beamImg = rgbBeamImg
+    measuredData.beamPf = pf
+    measuredData.symmetry = [cX, cY]
+    measuredData.size = [horiz_length, vert_length]
+    measuredData.boxMiddle = [midpoint_horizontal, midpoint_vertical]
+    
     return rgbBeamImg, results
 
-def intensityMeasure(images, configs, loadBar = LoadBarLevel):
+def intensityMeasure(images, configs, loadBar = LoadBarLevel, measuredData = MeasuredData):
     ## Parse Args ##
     intensityImg = images[0]
     beamImage = images[1]
@@ -547,9 +647,15 @@ def intensityMeasure(images, configs, loadBar = LoadBarLevel):
         pf[1] = True
     loadBar.increase()
     results = [flux, finalLux, pf]
+
+    measuredData.flux = flux
+    measuredData.lux = finalLux
+    measuredData.intensityPf = pf
+    measuredData.graphs = graphs
+
     return results
 
-def currentMeasure(lightConfig, loadBar = LoadBarLevel):
+def currentMeasure(lightConfig, loadBar = LoadBarLevel, measuredData = MeasuredData):
     pf = [False, False, False, False, False]
     loadBar.increase()
     # Current High Low
@@ -580,23 +686,31 @@ def currentMeasure(lightConfig, loadBar = LoadBarLevel):
     try:
         if int(currentlist[0]) > c0Lo and int(currentlist[0]) < c0Hi:
             pf[0] = True # NPN
+        measuredData.npnCurrent = currentlist[0]
+        measuredData.contPeak = currentlist[0]
         loadBar.increase()
         if int(currentlist[1]) > c1Lo and int(currentlist[1]) < c1Hi:
             pf[1] = True # PNP hi
+        measuredData.pnpHiCurrent = currentlist[1]
+        measuredData.analogHi = currentlist[1]
         loadBar.increase()
         if int(currentlist[2]) > c2Lo and int(currentlist[2]) < c2Hi:
             pf[2] = True # PNP lo
+        measuredData.pnpLoCurrent = currentlist[2]
+        measuredData.analogLo = currentlist[2]
         loadBar.increase()
         if int(currentlist[3]) > c3Lo and int(currentlist[3]) < c3Hi:
             pf[3] = True # NPN OD
         loadBar.increase()
         if int(currentlist[4]) > c4Lo and int(currentlist[4]) < c4Hi:
             pf[4] = True # PNP OD
+            measuredData.odPeak = currentlist[4]
         loadBar.increase()
     except:
         pf = [False, False, False, False, False]
         loadBar.increase()
     #print(currentlist)
+    measuredData.currentPf = pf
     
     time.sleep(0.5)
     loadBar.increase()
