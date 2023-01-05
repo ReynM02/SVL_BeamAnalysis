@@ -11,7 +11,7 @@ import find_ports as fp
 
 # Final image scale factors
 manta = 0.95   # 1
-alvium = 0.75  # 2
+alvium = 0.75 # 2
 
 arduino = serial.Serial()
 arduino.baudrate = 19200
@@ -249,7 +249,7 @@ def Capture(mode, exp, config, loadBar = LoadBarLevel):
                 print(e)
             print("exp set")
             loadBar.increase()
-            msg = str(mode) + str(int(exp/1000))
+            msg = str(mode) + str(exp/1000)
             print("msg created")
             loadBar.increase()
             msgbyte = bytes(msg, 'utf-8')
@@ -476,7 +476,18 @@ def beamMeasure(beamImg, configs, loadBar = LoadBarLevel, measuredData = Measure
     results = [pf, symGood, cY, cX, horiz_length, vert_length]
     #             0     1      2     3   4         5          6
     
-    measuredData.beamImg = rgbBeamImg
+    global alvium
+    try:
+        p = alvium
+        w = int(rgbBeamImg.shape[1] * p)
+        h = int(rgbBeamImg.shape[0] * p)
+    except:
+        p = w = h = 0
+        p = w = h = 0
+
+    res_img = cv2.resize(rgbBeamImg, (w,h))
+    
+    measuredData.beamImg = res_img
     measuredData.beamPf = pf
     measuredData.symmetry = [cX, cY]
     measuredData.symGood = symGood

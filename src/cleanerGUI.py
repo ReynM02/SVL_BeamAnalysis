@@ -254,7 +254,7 @@ def measuring(light_string, window, measuredData):
     proglevel.increase()
     configs = [lightConfig, systemConfig]
     try:
-        intensityImg, beamImg = CSLA.Capture("M", 34000, systemConfig, proglevel)
+        intensityImg, beamImg = CSLA.Capture(lightConfig["mode"], lightConfig["exposure"], systemConfig, proglevel)
         images = [intensityImg, beamImg]
     except Exception as e:
         print(e)
@@ -270,13 +270,13 @@ def measuring(light_string, window, measuredData):
     if noPic == False or noPic == None:
         print("Picture Passed")
         beam = threading.Thread(target=CSLA.beamMeasure,
-                                args=(beamImg, configs, proglevel, ),
+                                args=(beamImg, configs, proglevel, measuredData, ),
                                 daemon=True)
         intensity = threading.Thread(target=CSLA.intensityMeasure,
-                                args=(images, configs, proglevel, ),
+                                args=(images, configs, proglevel, measuredData, ),
                                 daemon=True)
         current = threading.Thread(target=CSLA.currentMeasure,
-                                args=(lightConfig, proglevel, ),
+                                args=(lightConfig, proglevel, measuredData, ),
                                 daemon=True)
         
         beam.start()
@@ -509,7 +509,7 @@ def main():
                 imgbytes = cv2.imencode(".png", measuredData.beamImg)[1].tobytes()
                 window["-IMAGE-"].update(data=imgbytes)
                 csvPath = SLA.documentPath + '/Data/' + str(month) + '-' + str(day) + '-' + str(year) + '_Light_Measurements.csv'
-                rowData = [light_string, serial_num]
+                rowData = [light_string, serialNum]
                 #rowData.extend(results)
                 append_list_as_row(csvPath, rowData)                
 
