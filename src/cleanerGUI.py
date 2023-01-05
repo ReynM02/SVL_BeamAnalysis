@@ -254,7 +254,7 @@ def measuring(light_string, window, measuredData):
     proglevel.increase()
     configs = [lightConfig, systemConfig]
     try:
-        intensityImg, beamImg = CSLA.Capture("M", 34000, systemConfig, proglevel, measuredData)
+        intensityImg, beamImg = CSLA.Capture("M", 34000, systemConfig, proglevel)
         images = [intensityImg, beamImg]
     except Exception as e:
         print(e)
@@ -282,12 +282,15 @@ def measuring(light_string, window, measuredData):
         beam.start()
         intensity.start()
         current.start()
-        
+
         beam.join()
         intensity.join()
         current.join()
-        
+
+    else:
+        print("No Picture Passed!")   
     proglevel.increase(True)
+    print(vars(measuredData))
     time.sleep(0.1)
     print(proglevel.level)
     window.write_event_value('Exit', '')
