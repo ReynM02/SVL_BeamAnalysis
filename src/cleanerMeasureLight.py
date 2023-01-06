@@ -551,117 +551,116 @@ def intensityMeasure(images, configs, loadBar = LoadBarLevel, measuredData = Mea
         cY = None
         print('no moments found')
         raise e
-    loadBar.increase()
-    # Create an Array of Pixel Locations (x,y) For Pixels With an Intensity
-    # Greater Than or Equal to uniformityValue  
-    uniformityIndex = np.where(bwBeamImg >= uniformityValue)
-    loadBar.increase()
-    minVal = np.asarray(uniformityIndex[1]).min()
-    maxVal = np.asarray(uniformityIndex[1]).max()
-    loadBar.increase()
-    midpoint_vertical = int((maxVal + minVal) / 2)
-    midpoint_horizontal = int((uniformityIndex[0][-1] + uniformityIndex[0][0]) / 2)
-    loadBar.increase()
-    # Define x and y start/end values for cross section profiles
-    y_start = uniformityIndex[0][0]
-    y_end = uniformityIndex[0][-1]
-    x_start = minVal
-    x_end = maxVal
-    loadBar.increase()
-    # Define length of horizontal and vertical cross section array
-    horiz_length = int((maxVal-minVal) / sysConfig["ppm_calibration"])
-    vert_length = int((uniformityIndex[0][-1]-uniformityIndex[0][0]) / sysConfig["ppm_calibration"]) 
-    horizontal_profile = np.arange(maxVal-minVal)
-    vertical_profile = np.arange(uniformityIndex[0][-1]-uniformityIndex[0][0])
-    loadBar.increase()
-    # Copy data from image into Horizontal Profile
-    x = 0
-    if x_end != 0:
-        while x_end > x_start:
-            x=x+1
-            horizontal_profile[x-1] = bwImage[cY][x_end-1]
-            x_end = x_end - 1
-    print("horizontal profile captured")
-    loadBar.increase()
-    # Copy data from image into Vertical Profile
-    x = 0
-    if y_end != 0:
-        while y_end > y_start:
-            x=x+1
-            vertical_profile[x-1] = bwImage[y_end-1][cX]
-            y_end = y_end - 1
-    print("vertical profile captured")
-    loadBar.increase()
-    # Arrange the plot cross section data
-    horiz_x = np.array(range(maxVal-minVal))
-    horiz_y = horizontal_profile
-    vert_x = np.array(range(uniformityIndex[0][-1]-uniformityIndex[0][0]))
-    vert_y = vertical_profile
-    loadBar.increase()
+    if cY != None:
+        loadBar.increase()
+        # Create an Array of Pixel Locations (x,y) For Pixels With an Intensity
+        # Greater Than or Equal to uniformityValue  
+        uniformityIndex = np.where(bwBeamImg >= uniformityValue)
+        loadBar.increase()
+        minVal = np.asarray(uniformityIndex[1]).min()
+        maxVal = np.asarray(uniformityIndex[1]).max()
+        loadBar.increase()
+        midpoint_vertical = int((maxVal + minVal) / 2)
+        midpoint_horizontal = int((uniformityIndex[0][-1] + uniformityIndex[0][0]) / 2)
+        loadBar.increase()
+        # Define x and y start/end values for cross section profiles
+        y_start = uniformityIndex[0][0]
+        y_end = uniformityIndex[0][-1]
+        x_start = minVal
+        x_end = maxVal
+        loadBar.increase()
+        # Define length of horizontal and vertical cross section array 
+        horizontal_profile = np.arange(maxVal-minVal)
+        vertical_profile = np.arange(uniformityIndex[0][-1]-uniformityIndex[0][0])
+        loadBar.increase()
+        # Copy data from image into Horizontal Profile
+        x = 0
+        if x_end != 0:
+            while x_end > x_start:
+                x=x+1
+                horizontal_profile[x-1] = bwImage[cY][x_end-1]
+                x_end = x_end - 1
+        print("horizontal profile captured")
+        loadBar.increase()
+        # Copy data from image into Vertical Profile
+        x = 0
+        if y_end != 0:
+            while y_end > y_start:
+                x=x+1
+                vertical_profile[x-1] = bwImage[y_end-1][cX]
+                y_end = y_end - 1
+        print("vertical profile captured")
+        loadBar.increase()
+        # Arrange the plot cross section data
+        horiz_x = np.array(range(maxVal-minVal))
+        horiz_y = horizontal_profile
+        vert_x = np.array(range(uniformityIndex[0][-1]-uniformityIndex[0][0]))
+        vert_y = vertical_profile
+        loadBar.increase()
 
-    horiz = [horiz_x, horiz_y]
-    vert = [vert_x, vert_y]
-    loadBar.increase()
+        horiz = [horiz_x, horiz_y]
+        vert = [vert_x, vert_y]
+        loadBar.increase()
 
-    graphs = [horiz, vert]
-    # graphs[0] = horiz, graphs[1] = vert
-    loadBar.increase()
+        graphs = [horiz, vert]
+        # graphs[0] = horiz, graphs[1] = vert
+        loadBar.increase()
 
-    luxHorizontal = np.arange(midpoint_horizontal-int(sysConfig["center_lux_size"]), midpoint_horizontal+int(sysConfig["center_lux_size"]))
-    luxvertical = [midpoint_vertical-int(sysConfig["center_lux_size"]), midpoint_vertical+int(sysConfig["center_lux_size"])]
-    luxBox = luxHorizontal
-    while luxvertical[0]+1 < luxvertical[1]:
-        luxBox = np.vstack((luxBox, luxHorizontal))
-        luxvertical[0] = luxvertical[0]+1
-    loadBar.increase()
+        luxHorizontal = np.arange(midpoint_horizontal-int(sysConfig["center_lux_size"]), midpoint_horizontal+int(sysConfig["center_lux_size"]))
+        luxvertical = [midpoint_vertical-int(sysConfig["center_lux_size"]), midpoint_vertical+int(sysConfig["center_lux_size"])]
+        luxBox = luxHorizontal
+        while luxvertical[0]+1 < luxvertical[1]:
+            luxBox = np.vstack((luxBox, luxHorizontal))
+            luxvertical[0] = luxvertical[0]+1
+        loadBar.increase()
 
-    luxMinVal = np.asarray(luxBox[1]).min()
-    luxMaxVal = np.asarray(luxBox[1]).max()
-    loadBar.increase()
+        luxMinVal = np.asarray(luxBox[1]).min()
+        luxMaxVal = np.asarray(luxBox[1]).max()
+        loadBar.increase()
 
-    luxHigh = lightConfig["lux_good"] + lightConfig["lux_tolerance"]
-    luxLow = lightConfig["lux_good"] - lightConfig["lux_tolerance"]
-    loadBar.increase()
+        luxHigh = lightConfig["lux_good"] + lightConfig["lux_tolerance"]
+        luxLow = lightConfig["lux_good"] - lightConfig["lux_tolerance"]
+        loadBar.increase()
 
-    # Calculate total Flux of 80% rectangle
-    row = uniformityIndex[0][0]
-    row_max = uniformityIndex[0][-1]
-    luxRow = luxBox[0][0]
-    luxRow_Max = luxBox[0][-1]
-    loadBar.increase()
-    while row <= row_max:
-        col = minVal
-        col_max = maxVal
-        while col <= col_max:
-            flux = flux + bwImage[row-1][col-1]
-            col = col+1
-        row = row+1
-    loadBar.increase()
+        # Calculate total Flux of 80% rectangle
+        row = uniformityIndex[0][0]
+        row_max = uniformityIndex[0][-1]
+        luxRow = luxBox[0][0]
+        luxRow_Max = luxBox[0][-1]
+        loadBar.increase()
+        while row <= row_max:
+            col = minVal
+            col_max = maxVal
+            while col <= col_max:
+                flux = flux + bwImage[row-1][col-1]
+                col = col+1
+            row = row+1
+        loadBar.increase()
 
-    while luxRow <= luxRow_Max:
-        col = luxMinVal
-        col_max = luxMaxVal
-        while col <= col_max:
-            lux = lux + bwImage[row-1][col-1]
-            col = col+1
-        luxRow = luxRow+1
-    loadBar.increase()
+        while luxRow <= luxRow_Max:
+            col = luxMinVal
+            col_max = luxMaxVal
+            while col <= col_max:
+                lux = lux + bwImage[row-1][col-1]
+                col = col+1
+            luxRow = luxRow+1
+        loadBar.increase()
 
-    nonbiasLux = int(lux / int(lightConfig["exposure"]))
+        nonbiasLux = int(lux / int(lightConfig["exposure"]))
 
-    finalLux = nonbiasLux * int(sysConfig["lux_calibration"])
-    pf = [False, False]
-    loadBar.increase()
-    # -- Flux
-    if flux > intensityLow and flux < intensityHigh:
-        # Flux Passed
-        pf[0] = True
-    loadBar.increase()
-    # -- LUX
-    if finalLux > luxLow and finalLux < luxHigh:
-        pf[1] = True
-    loadBar.increase()
-    results = [flux, finalLux, pf]
+        finalLux = nonbiasLux * int(sysConfig["lux_calibration"])
+        pf = [False, False]
+        loadBar.increase()
+        # -- Flux
+        if flux > intensityLow and flux < intensityHigh:
+            # Flux Passed
+            pf[0] = True
+        loadBar.increase()
+        # -- LUX
+        if finalLux > luxLow and finalLux < luxHigh:
+            pf[1] = True
+        loadBar.increase()
+        results = [flux, finalLux, pf]
 
     measuredData.flux = flux
     measuredData.lux = finalLux
