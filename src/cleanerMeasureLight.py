@@ -404,77 +404,78 @@ def beamMeasure(beamImg, configs, loadBar = LoadBarLevel, measuredData = Measure
         cY = None
         print('no moments found')
         raise e
-    loadBar.increase()
-    # Create an Array of Pixel Locations (x,y) For Pixels With an Intensity
-    # Greater Than or Equal to uniformityValue  
-    uniformityIndex = np.where(beamImg >= uniformityValue)
-    print("uniformity index created")
-    loadBar.increase()
-    minVal = np.asarray(uniformityIndex[1]).min()
-    maxVal = np.asarray(uniformityIndex[1]).max()
-    loadBar.increase()
-    midpoint_vertical = int((maxVal + minVal) / 2)
-    midpoint_horizontal = int((uniformityIndex[0][-1] + uniformityIndex[0][0]) / 2)
-    loadBar.increase()
-    # Define x and y start/end values for cross section profiles
-    y_start = uniformityIndex[0][0]
-    y_end = uniformityIndex[0][-1]
-    x_start = minVal
-    x_end = maxVal
-    loadBar.increase()
-    # Define length of horizontal and vertical cross section array
-    horiz_length = int((maxVal-minVal) / sysConfig["ppm_calibration"])
-    vert_length = int((uniformityIndex[0][-1]-uniformityIndex[0][0]) / sysConfig["ppm_calibration"]) 
-    horizontal_profile = np.arange(maxVal-minVal)
-    vertical_profile = np.arange(uniformityIndex[0][-1]-uniformityIndex[0][0])
-    loadBar.increase()
-    # Arrange the plot cross section data
-    horiz_x = np.array(range(maxVal-minVal))
-    horiz_y = horizontal_profile
-    vert_x = np.array(range(uniformityIndex[0][-1]-uniformityIndex[0][0]))
-    vert_y = vertical_profile
-    loadBar.increase()
-    horiz = [horiz_x, horiz_y]
-    vert = [vert_x, vert_y]
-    loadBar.increase()
-    graphs = [horiz, vert]
-    # graphs[0] = horiz, graphs[1] = vert
-    loadBar.increase()
-    # Convert mono to RGB
-    rgbBeamImg = cv2.cvtColor(bwBeamImg, cv2.COLOR_GRAY2RGB)
-    # Apply Custom LUT
-    rgbBeamImg = cv2.LUT(rgbBeamImg, zemaxLut)
-    loadBar.increase()
-    #Draw 80% Box
-    cv2.rectangle(rgbBeamImg, (minVal, uniformityIndex[0][0]), (maxVal, uniformityIndex[0][-1]),
-        (255, 255, 255), 2)
-    loadBar.increase()
-    # Draw Cross Section Lines For Visual Feedback
-    cv2.line(rgbBeamImg, (cX, uniformityIndex[0][0]), (cX, uniformityIndex[0][-1]) ,(0, 0, 0), 2)
-    cv2.line(rgbBeamImg, (minVal, cY), (maxVal, cY), (0, 0, 0), 2)
-    loadBar.increase()
-    #Draw Center of 80% Rectangle and Label
-    cv2.circle(rgbBeamImg, (midpoint_vertical, midpoint_horizontal), 5, (0,0,0), -1)
-    cv2.putText(rgbBeamImg, "box center", (midpoint_vertical - 25, midpoint_horizontal - 25),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 2)
-    loadBar.increase()
-    # Draw Centroid of Beam and Label
-    cv2.circle(rgbBeamImg, (cX, cY), 5, (0,0,0), -1)
-    cv2.putText(rgbBeamImg, "centroid", (cX - 25, cY - 25),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 2)
-    loadBar.increase()
-    ## PASS/FAIL CALCULATION ##
-    # -- Symmetry
-    if midpoint_vertical-cY < symmetryGap and cX-midpoint_horizontal < symmetryGap:
-        # Symmetry Passed
-        pf[0] = True
-    symGood = [cX-midpoint_horizontal, midpoint_vertical-cY]
-    loadBar.increase()
-    # -- X,Y Value
-    if horiz_length > xLow and horiz_length < xHigh and vert_length > yLow and vert_length < yHigh:
-        # X Passed
-        pf[1] = True 
-    loadBar.increase()
-    results = [pf, symGood, cY, cX, horiz_length, vert_length]
-    #             0     1      2     3   4         5          6
+    if cY != None:
+        loadBar.increase()
+        # Create an Array of Pixel Locations (x,y) For Pixels With an Intensity
+        # Greater Than or Equal to uniformityValue  
+        uniformityIndex = np.where(beamImg >= uniformityValue)
+        print("uniformity index created")
+        loadBar.increase()
+        minVal = np.asarray(uniformityIndex[1]).min()
+        maxVal = np.asarray(uniformityIndex[1]).max()
+        loadBar.increase()
+        midpoint_vertical = int((maxVal + minVal) / 2)
+        midpoint_horizontal = int((uniformityIndex[0][-1] + uniformityIndex[0][0]) / 2)
+        loadBar.increase()
+        # Define x and y start/end values for cross section profiles
+        y_start = uniformityIndex[0][0]
+        y_end = uniformityIndex[0][-1]
+        x_start = minVal
+        x_end = maxVal
+        loadBar.increase()
+        # Define length of horizontal and vertical cross section array
+        horiz_length = int((maxVal-minVal) / sysConfig["ppm_calibration"])
+        vert_length = int((uniformityIndex[0][-1]-uniformityIndex[0][0]) / sysConfig["ppm_calibration"]) 
+        horizontal_profile = np.arange(maxVal-minVal)
+        vertical_profile = np.arange(uniformityIndex[0][-1]-uniformityIndex[0][0])
+        loadBar.increase()
+        # Arrange the plot cross section data
+        horiz_x = np.array(range(maxVal-minVal))
+        horiz_y = horizontal_profile
+        vert_x = np.array(range(uniformityIndex[0][-1]-uniformityIndex[0][0]))
+        vert_y = vertical_profile
+        loadBar.increase()
+        horiz = [horiz_x, horiz_y]
+        vert = [vert_x, vert_y]
+        loadBar.increase()
+        graphs = [horiz, vert]
+        # graphs[0] = horiz, graphs[1] = vert
+        loadBar.increase()
+        # Convert mono to RGB
+        rgbBeamImg = cv2.cvtColor(bwBeamImg, cv2.COLOR_GRAY2RGB)
+        # Apply Custom LUT
+        rgbBeamImg = cv2.LUT(rgbBeamImg, zemaxLut)
+        loadBar.increase()
+        #Draw 80% Box
+        cv2.rectangle(rgbBeamImg, (minVal, uniformityIndex[0][0]), (maxVal, uniformityIndex[0][-1]),
+            (255, 255, 255), 2)
+        loadBar.increase()
+        # Draw Cross Section Lines For Visual Feedback
+        cv2.line(rgbBeamImg, (cX, uniformityIndex[0][0]), (cX, uniformityIndex[0][-1]) ,(0, 0, 0), 2)
+        cv2.line(rgbBeamImg, (minVal, cY), (maxVal, cY), (0, 0, 0), 2)
+        loadBar.increase()
+        #Draw Center of 80% Rectangle and Label
+        cv2.circle(rgbBeamImg, (midpoint_vertical, midpoint_horizontal), 5, (0,0,0), -1)
+        cv2.putText(rgbBeamImg, "box center", (midpoint_vertical - 25, midpoint_horizontal - 25),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 2)
+        loadBar.increase()
+        # Draw Centroid of Beam and Label
+        cv2.circle(rgbBeamImg, (cX, cY), 5, (0,0,0), -1)
+        cv2.putText(rgbBeamImg, "centroid", (cX - 25, cY - 25),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 2)
+        loadBar.increase()
+        ## PASS/FAIL CALCULATION ##
+        # -- Symmetry
+        if midpoint_vertical-cY < symmetryGap and cX-midpoint_horizontal < symmetryGap:
+            # Symmetry Passed
+            pf[0] = True
+        symGood = [cX-midpoint_horizontal, midpoint_vertical-cY]
+        loadBar.increase()
+        # -- X,Y Value
+        if horiz_length > xLow and horiz_length < xHigh and vert_length > yLow and vert_length < yHigh:
+            # X Passed
+            pf[1] = True 
+        loadBar.increase()
+        results = [pf, symGood, cY, cX, horiz_length, vert_length]
+        #             0     1      2     3   4         5          6
     
     global alvium
     try:
