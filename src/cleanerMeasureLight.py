@@ -63,7 +63,7 @@ class MeasuredData:
     graphs = []
     symGood = []
 
-    def __init__(self):
+    def __init__(self, mode = 'MD'):
         self.flux = None
         self.lux = None
         self.symmetry = [None, None]
@@ -82,6 +82,8 @@ class MeasuredData:
         self.currentPf = [None, None, None, None, None]
         self.graphs = [None, None]
         self.symGood = [None, None]
+        self.boxMiddle = [None, None]
+        self.mode = mode
     
 class unused:
     def getList(self, dst):
@@ -249,7 +251,7 @@ def Capture(mode, exp, config, loadBar = LoadBarLevel):
                 print(e)
             print("exp set")
             loadBar.increase()
-            msg = str(mode) + str(exp/1000)
+            msg = str(mode) + str(exp)
             print("msg created")
             loadBar.increase()
             msgbyte = bytes(msg, 'utf-8')
@@ -464,17 +466,30 @@ def beamMeasure(beamImg, configs, loadBar = LoadBarLevel, measuredData = Measure
         loadBar.increase()
         ## PASS/FAIL CALCULATION ##
         # -- Symmetry
-        if midpoint_vertical-cY < symmetryGap and cX-midpoint_horizontal < symmetryGap:
+        y_low = midpoint_horizontal-symmetryGap
+        y_high = midpoint_horizontal+symmetryGap
+        x_low = midpoint_vertical-symmetryGap
+        x_high = midpoint_vertical+symmetryGap
+        
+        y_pass = False
+        x_pass = False
+        
+        if cY >= y_low and cY <= y_high:
             # Symmetry Passed
+            y_pass = True
+        loadBar.increase()
+        if cX >= x_low and cX <= x_high:
+            x_pass = True
+        loadBar.increase()
+        if x_pass == True and y_pass == True:
             pf[0] = True
-        symGood = [cX-midpoint_horizontal, midpoint_vertical-cY]
         loadBar.increase()
         # -- X,Y Value
         if horiz_length > xLow and horiz_length < xHigh and vert_length > yLow and vert_length < yHigh:
             # X Passed
             pf[1] = True 
         loadBar.increase()
-        results = [pf, symGood, cY, cX, horiz_length, vert_length]
+        results = [pf, cY, cX, horiz_length, vert_length]
         #             0     1      2     3   4         5          6
     
     global alvium
@@ -491,7 +506,6 @@ def beamMeasure(beamImg, configs, loadBar = LoadBarLevel, measuredData = Measure
     measuredData.beamImg = res_img
     measuredData.beamPf = pf
     measuredData.symmetry = [cX, cY]
-    measuredData.symGood = symGood
     measuredData.size = [horiz_length, vert_length]
     measuredData.boxMiddle = [midpoint_horizontal, midpoint_vertical]
     
@@ -671,6 +685,7 @@ def intensityMeasure(images, configs, loadBar = LoadBarLevel, measuredData = Mea
 
 def currentMeasure(lightConfig, loadBar = LoadBarLevel, measuredData = MeasuredData):
     pf = [False, False, False, False, False]
+    mode = measuredData.mode
     loadBar.increase()
     # Current High Low
     c0Hi = lightConfig["npn_current_good"] + lightConfig["npn_current_tolerance"]
@@ -698,32 +713,56 @@ def currentMeasure(lightConfig, loadBar = LoadBarLevel, measuredData = MeasuredD
     loadBar.increase()
     #print(currentlist)
     try:
-        if int(currentlist[0]) > c0Lo and int(currentlist[0]) < c0Hi:
-            pf[0] = True # NPN
-        measuredData.npnCurrent = currentlist[0]
-        measuredData.contPeak = currentlist[0]
-        loadBar.increase()
-        if int(currentlist[1]) > c1Lo and int(currentlist[1]) < c1Hi:
-            pf[1] = True # PNP hi
-        measuredData.pnpHiCurrent = currentlist[1]
-        measuredData.analogHi = currentlist[1]
-        loadBar.increase()
-        if int(currentlist[2]) > c2Lo and int(currentlist[2]) < c2Hi:
-            pf[2] = True # PNP lo
-        measuredData.pnpLoCurrent = currentlist[2]
-        measuredData.analogLo = currentlist[2]
-        loadBar.increase()
-        if int(currentlist[3]) > c3Lo and int(currentlist[3]) < c3Hi:
-            pf[3] = True # NPN OD
-        loadBar.increase()
-        if int(currentlist[4]) > c4Lo and int(currentlist[4]) < c4Hi:
-            pf[4] = True # PNP OD
-            measuredData.odPeak = currentlist[4]
-        loadBar.increase()
+        if mode == 'MD':
+            if int(currentlist[0]) > c0Lo and int(currentlist[0]) < c0Hi:
+                pf[0] = True # NPN
+            measuredData.npnCurrent = currentlist[0]
+            measuredData.contPeak = currentlist[0]
+            loadBar.increase()
+            if int(currentlist[1]) > c1Lo and int(currentlist[1]) < c1Hi:
+                pf[1] = True # PNP hi
+            measuredData.pnpHiCurrent = currentlist[1]
+            measuredData.analogHi = currentlist[1]
+            loadBar.increase()
+            if int(currentlist[2]) > c2Lo and int(currentlist[2]) < c2Hi:
+                pf[2] = True # PNP lo
+            measuredData.pnpLoCurrent = currentlist[2]
+            measuredData.analogLo = currentlist[2]
+            loadBar.increase()
+            if int(currentlist[3]) > c3Lo and int(currentlist[3]) < c3Hi:
+                pf[3] = True # NPN OD
+            loadBar.increase()
+            if int(currentlist[4]) > c4Lo and int(currentlist[4]) < c4Hi:
+                pf[4] = True # PNP OD
+                measuredData.odPeak = currentlist[4]
+            loadBar.increase()
+        elif mode == 'DO':
+            if int(currentlist[0]) > c0Lo and int(currentlist[0]) < c0Hi:
+                pf[0] = True # NPN
+            measuredData.npnCurrent = currentlist[0]
+            measuredData.contPeak = currentlist[0]
+            loadBar.increase()
+            if int(currentlist[1]) > c1Lo and int(currentlist[1]) < c1Hi:
+                pf[1] = True # PNP hi
+            measuredData.pnpHiCurrent = currentlist[1]
+            measuredData.analogHi = currentlist[1]
+            loadBar.increase()
+            if int(currentlist[2]) > c2Lo and int(currentlist[2]) < c2Hi:
+                pf[2] = True # PNP lo
+            measuredData.pnpLoCurrent = currentlist[2]
+            measuredData.analogLo = currentlist[2]
+            loadBar.increase()
+            if int(currentlist[3]) > c3Lo and int(currentlist[3]) < c3Hi:
+                pf[3] = True # NPN OD
+            loadBar.increase()
+            if int(currentlist[4]) > c4Lo and int(currentlist[4]) < c4Hi:
+                pf[4] = True # PNP OD
+                measuredData.odPeak = currentlist[4]
+            loadBar.increase()
     except:
         pf = [False, False, False, False, False]
         loadBar.increase()
-    #print(currentlist)
+    print(currentlist)
     measuredData.currentPf = pf
     
     time.sleep(0.5)
@@ -742,7 +781,7 @@ if __name__ == "__main__":
     # Main Definitions #
     noPic = None
     print("running")
-    lightConfig = loadConfig("JWL150-MD-WHI")
+    lightConfig = loadConfig("JWL150-DO-WHI")
     systemConfig = loadConfig("system_setup")
 
     configs = [lightConfig, systemConfig]

@@ -238,7 +238,7 @@ def saveReport(hidden, path):
         window["-ADVNCED-"].update(visible=True)
         window.Refresh()
     image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-    cv2.imshow("report", image)
+    #cv2.imshow("report", image)
     cv2.imwrite(path, image)
 
 def measuring(light_string, window, measuredData):
@@ -423,28 +423,6 @@ def main():
             window["-TIME-"].update(str(sysTime.strftime("%Y-%m-%d") + ' ' + sysTime.strftime("%H:%M:%S")))
             window["-PNSN-"].update(str(light_string + "\n" + serialNum))
             #print(splitString)
-            ProgLayout = [
-                [sg.Text(text="Measuring In Progress", font=["Open Sans",20,"bold"],size=(21,1), justification="right", pad=(0, 30)),
-                sg.Text("...", key='-load-', font=["Open Sans",20,"bold"],size=(5,1), justification="left", pad=(0, 30))],
-                [sg.ProgressBar(max_value=100, orientation='h', size=(20,30), key='-PROG-', expand_x = True)]
-            ]
-            ProgWin = sg.Window("Measuring...", ProgLayout, finalize=True, modal=True, disable_close=True, disable_minimize=True)
-            measuredData = CSLA.MeasuredData()
-            measureThread = threading.Thread(target=measuring, args=(light_string, ProgWin, measuredData, ), daemon=True)
-            loadingThread = threading.Thread(target=loading, args=(ProgWin, ), daemon=True)
-            measureThread.start()
-            loadingThread.start()
-            while True:
-                localEvent, values = ProgWin.read(timeout=20)
-                if localEvent == 'Exit':
-                    break
-                if localEvent.startswith('update_'):
-                    key_to_update = localEvent[len('update_'):]
-                    ProgWin[key_to_update].update(values[localEvent])
-                    ProgWin.refresh()
-                    continue
-            ProgWin.close()
-            loadingThread.join()
             try:
                 light = splitString[0]
                 mode = splitString[1]
@@ -460,6 +438,29 @@ def main():
                 sg.popup('        Error: Invalid Configuration\n Please Re-Enter Light P/N and S/N.', title="Error: InvalConfgErr", modal=True, icon=SVLIcon, font=["Open Sans",20,'bold'])
                 print("lightgistics")
                 invalConfig = True
+                
+            ProgLayout = [
+                [sg.Text(text="Measuring In Progress", font=["Open Sans",20,"bold"],size=(21,1), justification="right", pad=(0, 30)),
+                sg.Text("...", key='-load-', font=["Open Sans",20,"bold"],size=(5,1), justification="left", pad=(0, 30))],
+                [sg.ProgressBar(max_value=100, orientation='h', size=(20,30), key='-PROG-', expand_x = True)]
+            ]
+            ProgWin = sg.Window("Measuring...", ProgLayout, finalize=True, modal=True, disable_close=True, disable_minimize=True)
+            measuredData = CSLA.MeasuredData(mode)
+            measureThread = threading.Thread(target=measuring, args=(light_string, ProgWin, measuredData, ), daemon=True)
+            loadingThread = threading.Thread(target=loading, args=(ProgWin, ), daemon=True)
+            measureThread.start()
+            loadingThread.start()
+            while True:
+                localEvent, values = ProgWin.read(timeout=20)
+                if localEvent == 'Exit':
+                    break
+                if localEvent.startswith('update_'):
+                    key_to_update = localEvent[len('update_'):]
+                    ProgWin[key_to_update].update(values[localEvent])
+                    ProgWin.refresh()
+                    continue
+            ProgWin.close()
+            loadingThread.join()
 
             if invalConfig == False:
                 try:
@@ -472,7 +473,7 @@ def main():
                     pol = ''
 
                 print(light_string)
-
+                    
                 data = SLA.loadConfig(light_string)
                 flux = measuredData.flux
                 lux = measuredData.lux
@@ -484,14 +485,42 @@ def main():
                 pnpCurrent10v = measuredData.pnpHiCurrent
                 pnpCurrent5v = measuredData.pnpLoCurrent
                 odStrobe = measuredData.odPeak
-                symGood = measuredData.symGood
+                symGood = [measuredData.boxMiddle[1], measuredData.boxMiddle[0]]
+                
+                if data == None:
+                    data = "--"
+                if flux == None:
+                    flux = "--"
+                if lux == None:
+                    lux = "--"
+                if cY == None:
+                    cY = "--"
+                if cX == None:
+                    cX = "--"
+                if yLen == None:
+                    yLen = "--"
+                if xLen == None:
+                    xLen = "--"
+                if npnCurrent == None:
+                    npnCurrent = "--"
+                if pnpCurrent10v == None:
+                    pnpCurrent10v = "--"
+                if pnpCurrent5v == None:
+                    pnpCurrent5v = "--"
+                if odStrobe == None:
+                    odStrobe = "--"                 
+                
+                
+                if cY == "--":
+                    didntRun = True
+                else:
+                    didntRun = False
 
-                #if didntRun == True:
-                    #sg.popup('                    Error: Program Error\n Alert Supervisor for Debuging or Try Again.', title="Error: PrgmErr", modal=True, icon=SVLIcon, font=["Open Sans",20,'bold'])
-                    #sg.popup('                    Error: No Image Passed\n Alert Supervisor for Debuging or Try Again.', title="Error: ImgErr", modal=True, icon=SVLIcon, font=["Open Sans",20,'bold'])
-                #else:   
-                plot_figure(1, measuredData.graphs[0][0], measuredData.graphs[0][1])
-                plot_figure(2, measuredData.graphs[1][0], measuredData.graphs[1][1])
+                if didntRun == True:
+                    sg.popup('                    Error: Program Error\n Alert Supervisor for Debuging or Try Again.', title="Error: PrgmErr", modal=True, icon=SVLIcon, font=["Open Sans",20,'bold'])
+                else:
+                    plot_figure(1, measuredData.graphs[0][0], measuredData.graphs[0][1])
+                    plot_figure(2, measuredData.graphs[1][0], measuredData.graphs[1][1])
                 #frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
                 # Update Values for Report Tab
@@ -540,17 +569,21 @@ def main():
                     window["-SYMPF-"].update("PASS", text_color='green')
                 else:
                     window["-SYMPF-"].update("FAIL", text_color='red')
-                symHLStr = "("+ str(symGood[0]) +","+str(symGood[1])+"±"+str(data["symmetry_tolerance"])+")"
+                symHLStr = "("+ str(symGood[0])+"±"+str(data["symmetry_tolerance"]) +","+str(symGood[1])+"±"+str(data["symmetry_tolerance"])+")"
                 window["-SYMHL-"].update(symHLStr)
                 
                 # - BEAM-SIZE OPERATIONS
+                if xLen == None:
+                    xLen = "None"
+                if yLen == None:
+                    yLen == "None"
                 szMZRDStr = "("+str(xLen)+","+str(yLen)+")"
                 window["-SZMZRD-"].update(szMZRDStr)
                 if measuredData.beamPf[1] == True:
                     window["-SZPF-"].update("PASS", text_color='green')
                 else:
                     window["-SZPF-"].update("FAIL", text_color='red')
-                szHLStr = "("+ str(data["x_good"]) + "±" + str(data["x_tolerance"]) +","+str(symGood[1])+"±"+str(data["symmetry_tolerance"])+")"
+                szHLStr = "("+ str(data["x_good"]) + "±" + str(data["x_tolerance"]) +","+ str(data["y_good"]) + "±" + str(data["y_tolerance"])+")"
                 window["-SZHL-"].update(szHLStr)
 
                 # - CURRENT OPERATIONS
@@ -596,7 +629,7 @@ def main():
                 else:
                     window["-PNPLOPF-"].update("FAIL", text_color='red')
                     window["-ALOPF-"].update("FAIL", text_color='red')
-                if measuredData.currentPf[3] == True:
+                if measuredData.currentPf[4] == True:
                     window["-PCRNTOPF-"].update("PASS", text_color='green')
                 else:
                     window["-PCRNTOPF-"].update("FAIL", text_color='red')
@@ -628,7 +661,7 @@ def main():
                         [sg.OK(size=(10,1), font=["",50,""],p=((15,0),(0,0)))]
                     ]
                     window["-STATUS-"].update("FAIL", text_color="red")
-                pathStr = SLA.documentPath + "/ReportImages/" + light_string + '_'+ serialNum + '_' + dateString + '.jpg'
+                pathStr = SLA.documentPath + "/Reports/" + light_string + '_'+ serialNum + '_' + dateString + '.jpg'
                 saveReport(hidden, pathStr)
                 choice, _ = sg.Window('Measurment Data', output, modal=False).read(close=True)
             window['-MEASURE-'].update(disabled=False)

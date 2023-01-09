@@ -59,11 +59,11 @@ void setup() {
 void loop() {
     if (Serial.available() > 0){
         dac.setDACOutVoltage(0, PNP);
-        digitalWrite(dPNP, HIGH);
         input = Serial.readString();
         mode = input.charAt(0);
         input.remove(0,1);
         expTime = input.toInt();
+        Serial.print(expTime);
         if(mode != '\n'){
             switch (mode)
             {
@@ -94,7 +94,8 @@ void loop() {
         Serial.flush();
         Serial.end();
         Serial.begin(19200);
-    }//end if
+    }
+    digitalWrite(dPNP, HIGH);//end if
 }//end loop()
 
 /**USER DEFINED FUNCTIONS**/
@@ -120,12 +121,13 @@ void trigNPN(){
 
 void trigPNP(int level){
     dac.setDACOutVoltage(level, PNP); // light on PNP
+    digitalWrite(dPNP, LOW);    
 #ifdef DEBUG
     Serial.println("PNP ON");
 #endif
     delay(onDelay);
     readCurrent();
-    dac.setDACOutVoltage(0, PNP); // light off PNP
+    digitalWrite(dPNP, HIGH);
 #ifdef DEBUG
     Serial.println("PNP OFF");
 #endif
@@ -144,9 +146,10 @@ void NPNStrobe(){
 
 void NPNStrobeDO(){
     Wire.begin(0x70);
+    digitalWrite(dPNP, HIGH);
     for(int x = 0; x < 200; x++){
             digitalWrite(NPNPin, HIGH);
-            delay(.35);
+            delayMicroseconds(350);
             digitalWrite(NPNPin, LOW);
             delay(10);
         }
@@ -159,7 +162,7 @@ void PNPStrobeDO(int level){
     Wire.begin(0x70);
     for(int x = 0; x < 200; x++){
             digitalWrite(dPNP, HIGH);
-            delay(.35);
+            delayMicroseconds(350);
             digitalWrite(dPNP, LOW);
             delay(10);
         }
@@ -168,7 +171,7 @@ void PNPStrobeDO(int level){
 
 void PNPStrobe(int level){
     dac.setDACOutVoltage(level, PNP); // light on PNP
-    delay(100);
+    delay(200);
     Wire.begin(0x70);
     for(int x = 0; x < 200; x++){
             digitalWrite(dPNP, HIGH);
@@ -271,9 +274,11 @@ String dubOverDrive(){
     String currentStr = "";
     dac.setDACOutVoltage(5000, analog); // 10v Analog
     PNPStrobeDO(5000);
+    digitalWrite(dPNP, HIGH);
     currentStr += peakCurrent;
     currentStr += ",";
     delay(100);
+    digitalWrite(dPNP, HIGH);
     NPNStrobeDO();
     currentStr += peakCurrent;
     currentStr += ",";
@@ -292,27 +297,28 @@ bool triggerCam(char mode){
     Serial.write("S");
     delay(200);
     digitalWrite(camPin, HIGH);
-    delay(expTime);
+    delayMicroseconds(expTime);
     digitalWrite(camPin, LOW);
     serialHandshake();
     //Foreground Image
     dac.setDACOutVoltage(5000, analog); // 10v analog
+    delay(500);
     digitalWrite(dPNP, HIGH);
-    //dac.setDACOutVoltage(5000, PNP);
-    delay(100);
+    dac.setDACOutVoltage(5000, PNP);
+    delay(300);
     Serial.write("S");
     delay(200);
-    digitalWrite(NPNPin, HIGH); // Light on with NPN
+    digitalWrite(dPNP, LOW); // Light on with NPN
     digitalWrite(camPin, HIGH);  // Camera Pulse Started
-    delay(expTime);             
+    delayMicroseconds(expTime);            
     digitalWrite(camPin, LOW); // Camera Pulse ended
-    digitalWrite(NPNPin, LOW);  // Light Off
+    digitalWrite(dPNP, HIGH);  // Light Off
     serialHandshake();          // Wait for image to be grabbed
 }//end triggerCam()
 
 // - I2C Interrupt Handler
 void handler(int howMany){
-   Serial.print("Data Received: ");
+   //Serial.print("Data Received: ");
     int x = 0;
     while(Wire.available()) {
         byte c = Wire.read();    // Receive a byte as character
