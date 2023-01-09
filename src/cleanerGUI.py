@@ -100,8 +100,8 @@ lists = [
 image_column = [
     [sg.Text("EOL Tester", size=(30, 1), text_color="#134A8F", justification="center", font=["Kanit",48,"bold"], expand_x= True)],
     [sg.Image(filename="", key="-IMAGE-", size=(80, 80), expand_x=True, expand_y=True, background_color="#ffffff")],
-    [sg.Text("Light P/N:", font=["Open Sans",15,""]), sg.InputText(default_text="JWL150-MD-WHI", enable_events=True, size=(20, 5), font=["",15,""], key="-LIGHT_STRING-", do_not_clear=True)],
-    [sg.Text("Light S/N:", font=["Open Sans",15,""]), sg.InputText(default_text="SVL", enable_events=True, size=(20, 5), font=["",15,""], key="-SERIAL_NUM-", do_not_clear=True)],
+    [sg.Text("Light P/N:", font=["Open Sans",15,""], key="P/NT"), sg.InputText(default_text="", enable_events=True, size=(20, 5), font=["",15,""], key="-LIGHT_STRING-", do_not_clear=True)],
+    [sg.Text("Light S/N:", font=["Open Sans",15,""], key="S/NT"), sg.InputText(default_text="", enable_events=True, size=(20, 5), font=["",15,""], key="-SERIAL_NUM-", do_not_clear=True)],
     [sg.Button("Measure", size=(10,2), font=["Open Sans",20,"bold"], key="-MEASURE-")]
 ]
 
@@ -201,6 +201,7 @@ date = datetime.datetime.now()
 month, day, year = date.month, date.day, date.year
 camera = None
 user = None
+oldstr = ''
 
 print(month, day, year)
 
@@ -211,6 +212,8 @@ def hideButtons():
     window["-LIGHT_STRING-"].update(visible=False)
     window["-SERIAL_NUM-"].update(visible=False)
     window["-MEASURE-"].update(visible=False)
+    window["P/NT"].update(visible=False)
+    window["S/NT"].update(visible=False)   
 
 def showButtons():
     window["-SHWRPRT-"].update(visible=True)
@@ -219,6 +222,8 @@ def showButtons():
     window["-LIGHT_STRING-"].update(visible=True)
     window["-SERIAL_NUM-"].update(visible=True)
     window["-MEASURE-"].update(visible=True)
+    window["P/NT"].update(visible=True)
+    window["S/NT"].update(visible=True)   
 
 def saveReport(hidden, path):
     hideButtons()
@@ -438,30 +443,30 @@ def main():
                 sg.popup('        Error: Invalid Configuration\n Please Re-Enter Light P/N and S/N.', title="Error: InvalConfgErr", modal=True, icon=SVLIcon, font=["Open Sans",20,'bold'])
                 print("lightgistics")
                 invalConfig = True
-                
-            ProgLayout = [
-                [sg.Text(text="Measuring In Progress", font=["Open Sans",20,"bold"],size=(21,1), justification="right", pad=(0, 30)),
-                sg.Text("...", key='-load-', font=["Open Sans",20,"bold"],size=(5,1), justification="left", pad=(0, 30))],
-                [sg.ProgressBar(max_value=100, orientation='h', size=(20,30), key='-PROG-', expand_x = True)]
-            ]
-            ProgWin = sg.Window("Measuring...", ProgLayout, finalize=True, modal=True, disable_close=True, disable_minimize=True)
-            measuredData = CSLA.MeasuredData(mode)
-            measureThread = threading.Thread(target=measuring, args=(light_string, ProgWin, measuredData, ), daemon=True)
-            loadingThread = threading.Thread(target=loading, args=(ProgWin, ), daemon=True)
-            measureThread.start()
-            loadingThread.start()
-            while True:
-                localEvent, values = ProgWin.read(timeout=20)
-                if localEvent == 'Exit':
-                    break
-                if localEvent.startswith('update_'):
-                    key_to_update = localEvent[len('update_'):]
-                    ProgWin[key_to_update].update(values[localEvent])
-                    ProgWin.refresh()
-                    continue
-            ProgWin.close()
-            loadingThread.join()
-
+            
+            if not invalConfig:
+                ProgLayout = [
+                    [sg.Text(text="Measuring In Progress", font=["Open Sans",20,"bold"],size=(21,1), justification="right", pad=(0, 30)),
+                    sg.Text("...", key='-load-', font=["Open Sans",20,"bold"],size=(5,1), justification="left", pad=(0, 30))],
+                    [sg.ProgressBar(max_value=100, orientation='h', size=(20,30), key='-PROG-', expand_x = True)]
+                ]
+                ProgWin = sg.Window("Measuring...", ProgLayout, finalize=True, modal=True, disable_close=True, disable_minimize=True)
+                measuredData = CSLA.MeasuredData(mode)
+                measureThread = threading.Thread(target=measuring, args=(light_string, ProgWin, measuredData, ), daemon=True)
+                loadingThread = threading.Thread(target=loading, args=(ProgWin, ), daemon=True)
+                measureThread.start()
+                loadingThread.start()
+                while True:
+                    localEvent, values = ProgWin.read(timeout=20)
+                    if localEvent == 'Exit':
+                        break
+                    if localEvent.startswith('update_'):
+                        key_to_update = localEvent[len('update_'):]
+                        ProgWin[key_to_update].update(values[localEvent])
+                        ProgWin.refresh()
+                        continue
+                ProgWin.close()
+                loadingThread.join()
             if invalConfig == False:
                 try:
                     lens = splitString[3]
@@ -665,23 +670,37 @@ def main():
                 saveReport(hidden, pathStr)
                 choice, _ = sg.Window('Measurment Data', output, modal=False).read(close=True)
             window['-MEASURE-'].update(disabled=False)
-        elif event == "-LIGHT-":
-            if values["-LIGHT-"] == 'JWL':
-                window["-SIZE-"].update(values=other_size)
-            else:
-                window["-SIZE-"].update(values=linear_size)
-
         elif event == "-LIGHT_STRING-":
+            global oldstr
             light_string = values["-LIGHT_STRING-"]
-
-            if 'SVL' in light_string:
+            print(light_string)
+            if '!' in light_string:
                 window["-LIGHT_STRING-"].update(value='')
+            if '<CR><LF>' in light_string:
+                if '<GS>' in light_string:
+                    newstr = light_string.split('<')
+                    light_string = newstr[0]
+                    window["-LIGHT_STRING-"].update(value=light_string)
+                elif 'SVL' in light_string:
+                    window["-LIGHT_STRING-"].update(value='') 
+            else:
+                print("notinstr")
 
         elif event == "-SERIAL_NUM-":
             serial_num = values["-SERIAL_NUM-"]
 
-            if 'S' not in serial_num:
-                window["-SERIAL_NUM-"].update(value='')       
+            if '!' in serial_num:
+                window["-SERIAL_NUM-"].update(value='')
+            if '<CR><LF>' in serial_num:
+                if '<GS>' not in serial_num:
+                    newstr = serial_num.split('<')
+                    serial_num = newstr[0]
+                    window["-SERIAL_NUM-"].update(value=serial_num)
+                elif 'SVL' not in serial_num:
+                    window["-SERIAL_NUM-"].update(value='') 
+            else:
+                print("notinstr")  
+                
         if ranOnce == 1:
             launched = True
             ranOnce = 0
