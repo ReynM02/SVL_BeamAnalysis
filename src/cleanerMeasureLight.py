@@ -303,11 +303,13 @@ class MeasuredData:
         loadBar.increase()
         beamImg = beamImg.astype(np.uint8)
         loadBar.increase()
+        self.beamImg = beamImg
+        self.intensityImg = unwarped
         
         return unwarped, beamImg
     #End CaptureExt() 
 
-    def loadConfig(light_string):
+    def loadConfig(self, light_string):
         filePath = documentPath + "/configs/" + light_string + ".json"
         print(filePath)
         try:
@@ -653,7 +655,8 @@ class MeasuredData:
         return results
 
     def currentMeasure(self, lightConfig = None, loadBar = LoadBarLevel):
-        pf = [False, False, False, False, False]
+        if lightConfig == None:
+            lightConfig = self.lightConfig
         mode = self.mode
         loadBar.increase()
         if mode == 'M':

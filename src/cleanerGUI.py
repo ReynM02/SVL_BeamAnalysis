@@ -626,7 +626,7 @@ def main():
                     [sg.ProgressBar(max_value=100, orientation='h', size=(20,30), key='-PROG-', expand_x = True)]
                 ]
                 ProgWin = sg.Window("Measuring...", ProgLayout, finalize=True, modal=True, disable_close=True, disable_minimize=True)
-                measuredData = CSLA.MeasuredData(mode)
+                measuredData = CSLA.MeasuredData(light_string)
                 measureThread = threading.Thread(target=measuring, args=(light_string, ProgWin, measuredData, ), daemon=True)
                 loadingThread = threading.Thread(target=loading, args=(ProgWin, ), daemon=True)
                 measureThread.start()
@@ -815,29 +815,48 @@ def main():
                 window["-AHIMZRD-"].update(npnCurrent)      # peak current when triggered with analog at 10v
                 window["-ALOMZRD-"].update(pnpCurrent5v)    # peak current when triggered with analog at 5v
                 # Pass/Fail
-                if measuredData.currentPf[0] == True:
-                    window["-NPNCRNTPF-"].update("PASS", text_color='green')
-                    window["-PCRNTPF-"].update("PASS", text_color='green')
-                    window["-AHIPF-"].update("PASS", text_color='green')
-                else:
-                    window["-NPNCRNTPF-"].update("FAIL", text_color='red')
-                    window["-PCRNTPF-"].update("FAIL", text_color='red')
-                    window["-AHIPF-"].update("FAIL", text_color='red')
-                if measuredData.currentPf[1] == True:
-                    window["-PNPHIPF-"].update("PASS", text_color='green')
-                else:
-                    window["-PNPHIPF-"].update("FAIL", text_color='red')
-                if measuredData.currentPf[2] == True:
-                    window["-PNPLOPF-"].update("PASS", text_color='green')
-                    window["-ALOPF-"].update("PASS", text_color='green')
-                else:
-                    window["-PNPLOPF-"].update("FAIL", text_color='red')
-                    window["-ALOPF-"].update("FAIL", text_color='red')
-                if measuredData.currentPf[4] == True:
-                    window["-PCRNTOPF-"].update("PASS", text_color='green')
-                else:
-                    window["-PCRNTOPF-"].update("FAIL", text_color='red')
-                
+                if mode == 'M':
+                    if measuredData.currentPf[0] == True:
+                        window["-NPNCRNTPF-"].update("PASS", text_color='green')
+                        window["-PCRNTPF-"].update("PASS", text_color='green')
+                        window["-AHIPF-"].update("PASS", text_color='green')
+                    else:
+                        window["-NPNCRNTPF-"].update("FAIL", text_color='red')
+                        window["-PCRNTPF-"].update("FAIL", text_color='red')
+                        window["-AHIPF-"].update("FAIL", text_color='red')
+                    if measuredData.currentPf[1] == True:
+                        window["-PNPHIPF-"].update("PASS", text_color='green')
+                    else:
+                        window["-PNPHIPF-"].update("FAIL", text_color='red')
+                    if measuredData.currentPf[2] == True:
+                        window["-PNPLOPF-"].update("PASS", text_color='green')
+                        window["-ALOPF-"].update("PASS", text_color='green')
+                    else:
+                        window["-PNPLOPF-"].update("FAIL", text_color='red')
+                        window["-ALOPF-"].update("FAIL", text_color='red')
+                    if measuredData.currentPf[4] == True:
+                        window["-PCRNTOPF-"].update("PASS", text_color='green')
+                    else:
+                        window["-PCRNTOPF-"].update("FAIL", text_color='red')
+                elif mode == 'D':
+                    if measuredData.currentPf[0] == True:
+                        window["-NPNCRNTPF-"].update("PASS", text_color='green')
+                        window["-PCRNTPF-"].update("PASS", text_color='green')
+                    else:
+                        window["-NPNCRNTPF-"].update("FAIL", text_color='red')
+                        window["-PCRNTPF-"].update("FAIL", text_color='red')
+                    if measuredData.currentPf[1] == True:
+                        window["-PNPHIPF-"].update("PASS", text_color='green')
+                        window["-AHIPF-"].update("PASS", text_color='green')
+                    else:
+                        window["-AHIPF-"].update("FAIL", text_color='red')
+                        window["-PNPHIPF-"].update("FAIL", text_color='red')
+                    if measuredData.currentPf[2] == True:
+                        window["-PNPLOPF-"].update("PASS", text_color='green')
+                        window["-ALOPF-"].update("PASS", text_color='green')
+                    else:
+                        window["-PNPLOPF-"].update("FAIL", text_color='red')
+                        window["-ALOPF-"].update("FAIL", text_color='red')
                 pf = []
                 pf.extend(measuredData.beamPf)
                 pf.extend(measuredData.intensityPf)
