@@ -422,7 +422,7 @@ def measuring(light_string, window, measuredData):
     proglevel.increase()
     configs = [lightConfig, systemConfig]
     try:
-        intensityImg, beamImg = CSLA.Capture(lightConfig["mode"], lightConfig["exposure"], systemConfig, proglevel)
+        intensityImg, beamImg = measuredData.Capture(lightConfig["mode"], lightConfig["exposure"], systemConfig, proglevel)
         images = [intensityImg, beamImg]
     except Exception as e:
         print(e)
@@ -437,14 +437,23 @@ def measuring(light_string, window, measuredData):
     proglevel.increase()
     if noPic == False or noPic == None:
         print("Picture Passed")
-        beam = threading.Thread(target=CSLA.beamMeasure,
-                                args=(beamImg, configs, proglevel, measuredData, ),
+    #    beam = threading.Thread(target=CSLA.beamMeasure,
+    #                            args=(beamImg, configs, proglevel, measuredData, ),
+    #                            daemon=True)
+        beam = threading.Thread(target=measuredData.beamMeasure,
+                                args=(None, None, proglevel, ),
                                 daemon=True)
-        intensity = threading.Thread(target=CSLA.intensityMeasure,
-                                args=(images, configs, proglevel, measuredData, ),
+    #    intensity = threading.Thread(target=CSLA.intensityMeasure,
+    #                            args=(images, configs, proglevel, measuredData, ),
+    #                            daemon=True)
+        intensity = threading.Thread(target=measuredData.intensityMeasure,
+                                args=(None, None, proglevel, ),
                                 daemon=True)
-        current = threading.Thread(target=CSLA.currentMeasure,
-                                args=(lightConfig, proglevel, measuredData, ),
+    #    current = threading.Thread(target=CSLA.currentMeasure,
+    #                            args=(lightConfig, proglevel, measuredData, ),
+    #                            daemon=True)
+        current = threading.Thread(target=measuredData.currentMeasure,
+                                args=(None, proglevel, ),
                                 daemon=True)
         
         beam.start()
