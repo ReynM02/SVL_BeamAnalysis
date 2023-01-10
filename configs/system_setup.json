@@ -12,6 +12,6 @@
                 [1345, 1112]
             ],
     "ppm_calibration": 1.96,
-    "lux_calibration": 1000,
-    "center_lux_size": 31
+    "intensity_calibration": 1000,
+    "center_lux_size": 63
 }

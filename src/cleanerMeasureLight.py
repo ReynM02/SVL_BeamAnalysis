@@ -38,7 +38,7 @@ class LoadBarLevel:
                 self.level += diff
         else:
             self.level = self.level
-        print(self.level)
+        #print(self.level)
         if self.window != None:
             self.window.write_event_value('update_-PROG-', self.level)
 
@@ -1337,6 +1337,8 @@ def intensityMeasure(images, configs, loadBar = LoadBarLevel, measuredData = Mea
                 col = col+1
             row = row+1
         loadBar.increase()
+        nonbiasFlux = int(flux / int(lightConfig["exposure"]))
+        finalFlux = nonbiasFlux * int(sysConfig["intensity_calibration"])
 
         while luxRow <= luxRow_Max:
             col = luxMinVal
@@ -1348,12 +1350,13 @@ def intensityMeasure(images, configs, loadBar = LoadBarLevel, measuredData = Mea
         loadBar.increase()
 
         nonbiasLux = int(lux / int(lightConfig["exposure"]))
-
-        finalLux = nonbiasLux * int(sysConfig["lux_calibration"])
+        nonbiasLux = nonbiasLux/10.33
+        nonbiasLux = nonbiasLux/10000
+        finalLux = nonbiasLux * int(sysConfig["intensity_calibration"])
         pf = [False, False]
         loadBar.increase()
         # -- Flux
-        if flux > intensityLow and flux < intensityHigh:
+        if finalFlux > intensityLow and finalFlux < intensityHigh:
             # Flux Passed
             pf[0] = True
         loadBar.increase()
@@ -1363,7 +1366,7 @@ def intensityMeasure(images, configs, loadBar = LoadBarLevel, measuredData = Mea
         loadBar.increase()
         results = [flux, finalLux, pf]
 
-    measuredData.flux = flux
+    measuredData.flux = finalFlux
     measuredData.lux = finalLux
     measuredData.intensityPf = pf
     measuredData.graphs = graphs

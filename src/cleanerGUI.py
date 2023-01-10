@@ -100,9 +100,9 @@ lists = [
 image_column = [
     [sg.Text("EOL Tester", size=(30, 1), text_color="#134A8F", justification="center", font=["Kanit",48,"bold"], expand_x= True)],
     [sg.Image(filename="", key="-IMAGE-", size=(80, 80), expand_x=True, expand_y=True, background_color="#ffffff")],
-    [sg.Text("Light P/N:", font=["Open Sans",15,""], key="P/NT"), sg.InputText(default_text="", enable_events=True, size=(20, 5), font=["",15,""], key="-LIGHT_STRING-", do_not_clear=True)],
-    [sg.Text("Light S/N:", font=["Open Sans",15,""], key="S/NT"), sg.InputText(default_text="", enable_events=True, size=(20, 5), font=["",15,""], key="-SERIAL_NUM-", do_not_clear=True)],
-    [sg.Button("Measure", size=(10,2), font=["Open Sans",20,"bold"], key="-MEASURE-")]
+    [sg.pin(sg.Text("Light P/N:", font=["Open Sans",15,""], key="P/NT")), sg.InputText(default_text="", enable_events=True, size=(20, 5), font=["",15,""], key="-LIGHT_STRING-", do_not_clear=True)],
+    [sg.pin(sg.Text("Light S/N:", font=["Open Sans",15,""], key="S/NT")), sg.InputText(default_text="", enable_events=True, size=(20, 5), font=["",15,""], key="-SERIAL_NUM-", do_not_clear=True)],
+    [sg.Button("Measure", size=(10,2), font=["Open Sans",20,"bold"], key="-MEASURE-"), sg.Button("Done", size=(10,2), font=["Open Sans",20,"bold"], key="-DONE-")]
 ]
 
 graph_column = [
@@ -141,7 +141,7 @@ md_report_column = [
         sg.Text("(999±99,999±99)", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-SZHL-"),
         sg.Text("PASS", font=["Open Sans",15,"bold"], size=(10, 1), justification="Left", text_color="green", expand_x= True, key="-SZPF-")],
     #[sg.HorizontalSeparator()],
-    [sg.Text("Driver Input Current (mA)", font=["Kanit",15,"bold"], size=(35, 1), justification="center", expand_x=True)],
+    [sg.Text("Driver Input Current (mA)", font=["Kanit",16,"bold"], size=(35, 1), justification="center", expand_x=True)],
     [sg.Text("Peak Current(Cont.):", font=["Open Sans",15,"bold"], size=(17, 1), justification="right", expand_x= True),
         sg.Text("200mA", font=["Open Sans",15,""], size=(10, 1), justification="center", expand_x= True, key="-PCRNTMZRD-"),
         sg.Text("999±99", font=["Open Sans",15,""], size=(15, 1), justification="center", expand_x= True, key="-PCRNTHL-"),
@@ -334,8 +334,11 @@ od_report_column = [
 ]
 
 advanced_column = [
-    [sg.Column(md_report_column, visible=True, key="-REPORT-", expand_x=True, expand_y=True),
-        sg.Column(graph_column, visible=False, key="-GRAPHS-", expand_x=True, expand_y=True)]
+    [sg.Column(md_report_column, visible=False, key="-REPORT-", expand_x=True, expand_y=True),
+    sg.Column(do_report_column, visible=False, key="-REPORT-", expand_x=True, expand_y=True),
+    sg.Column(co_report_column, visible=True, key="-REPORT-", expand_x=True, expand_y=True),
+    sg.Column(od_report_column, visible=False, key="-REPORT-", expand_x=True, expand_y=True),
+    sg.Column(graph_column, visible=False, key="-GRAPHS-", expand_x=True, expand_y=True)]
 ]
 
 # Define the window layout
@@ -638,6 +641,7 @@ def main():
                         ProgWin.refresh()
                         continue
                 ProgWin.close()
+
                 loadingThread.join()
             if invalConfig == False:
                 try:
@@ -664,8 +668,6 @@ def main():
                 odStrobe = measuredData.odPeak
                 symGood = [measuredData.boxMiddle[1], measuredData.boxMiddle[0]]
                 
-                if data == None:
-                    data = "--"
                 if flux == None:
                     flux = "--"
                 if lux == None:
@@ -701,7 +703,7 @@ def main():
                 #frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
                 # Update Values for Report Tab
-
+                mode = measuredData.mode
 
                 imgPath = SLA.documentPath+"/Images/"
                 #print (os.path.join(imgPath, light_string+'_'+serialNum+'_'+dateString+'.jpg'))
