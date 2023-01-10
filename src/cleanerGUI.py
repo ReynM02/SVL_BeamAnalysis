@@ -334,10 +334,10 @@ od_report_column = [
 ]
 
 advanced_column = [
-    [sg.Column(md_report_column, visible=False, key="-REPORT-", expand_x=True, expand_y=True),
-    sg.Column(do_report_column, visible=False, key="-REPORT-", expand_x=True, expand_y=True),
-    sg.Column(co_report_column, visible=True, key="-REPORT-", expand_x=True, expand_y=True),
-    sg.Column(od_report_column, visible=False, key="-REPORT-", expand_x=True, expand_y=True),
+    [sg.Column(md_report_column, visible=False, key="-REPORTM-", expand_x=True, expand_y=True),
+    sg.Column(do_report_column, visible=False, key="-REPORTD-", expand_x=True, expand_y=True),
+    sg.Column(co_report_column, visible=True, key="-REPORTC-", expand_x=True, expand_y=True),
+    sg.Column(od_report_column, visible=False, key="-REPORTO-", expand_x=True, expand_y=True),
     sg.Column(graph_column, visible=False, key="-GRAPHS-", expand_x=True, expand_y=True)]
 ]
 
@@ -704,7 +704,32 @@ def main():
 
                 # Update Values for Report Tab
                 mode = measuredData.mode
-
+                if mode == 'C':
+                    window["-REPORTC-"].update(visible=True)
+                    window["-REPORTO-"].update(visible=False)
+                    window["-REPORTM-"].update(visible=False)
+                    window["-REPORTD-"].update(visible=False)
+                elif mode == 'O':
+                    window["-REPORTC-"].update(visible=False)
+                    window["-REPORTO-"].update(visible=True)
+                    window["-REPORTM-"].update(visible=False)
+                    window["-REPORTD-"].update(visible=False)
+                elif mode == 'M':
+                    window["-REPORTC-"].update(visible=False)
+                    window["-REPORTO-"].update(visible=False)
+                    window["-REPORTM-"].update(visible=True)
+                    window["-REPORTD-"].update(visible=False)
+                elif mode == 'D':
+                    window["-REPORTC-"].update(visible=False)
+                    window["-REPORTO-"].update(visible=False)
+                    window["-REPORTM-"].update(visible=False)
+                    window["-REPORTD-"].update(visible=True)
+                else:
+                    window["-REPORTC-"].update(visible=True)
+                    window["-REPORTO-"].update(visible=False)
+                    window["-REPORTM-"].update(visible=False)
+                    window["-REPORTD-"].update(visible=False)
+                    
                 imgPath = SLA.documentPath+"/Images/"
                 #print (os.path.join(imgPath, light_string+'_'+serialNum+'_'+dateString+'.jpg'))
                 isWritten = cv2.imwrite(imgPath+light_string+'_'+serialNum+'_'+dateString+'.jpg', measuredData.beamImg)

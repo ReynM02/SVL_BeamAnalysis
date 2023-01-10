@@ -751,27 +751,6 @@ class MeasuredData:
         loadBar.increase()
         return results
     
-        self.flux = None
-        self.lux = None
-        self.symmetry = [None, None]
-        self.size = [None, None]
-        self.contPeak = None
-        self.odPeak = None
-        self.npnCurrent = None
-        self.pnpHiCurrent = None
-        self.pnpLoCurrent = None
-        self.analogHi = None
-        self.analogLo = None
-        self.beamImg = None
-        self.intensityImg = None
-        self.beamPf = [None, None]
-        self.intensityPf = [None, None]
-        self.currentPf = [None, None, None, None, None]
-        self.graphs = [None, None]
-        self.symGood = [None, None]
-        self.boxMiddle = [None, None]
-        self.mode = mode
-    
 class unused:
     def getList(self, dst):
         attr = getattr(self, dst)
