@@ -1,0 +1,6 @@
+{
+    "board": "arduino:avr:uno",
+    "sketch": "src\\ArduinoCode\\SLAElectronicsTests.ino",
+    "port": "COM9",
+    "programmer": "arduino:arduinoisp"
+}
